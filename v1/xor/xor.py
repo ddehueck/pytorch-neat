@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
 from torch import autograd
-from ..phenotype.feed_forward import FeedForwardNet
-import v1 as viz
+from v1.temp.phenotype import FeedForwardNet
+import v1.temp.visualize as viz
+
 
 inputs = list(map(lambda s: autograd.Variable(torch.Tensor([s])), [
     [0, 0],
@@ -42,6 +43,9 @@ def xor_fitness_fn(genome):
         print('----------------------------')
         print(genome)
         print('Fitness:', fitness)
+        preds, labels = get_preds_and_labels(genome)
+        print('Predictions:', str(preds))
+        print('Labels:     ', str(labels))
         viz.draw_net(genome, view=True, show_disabled=True, filename='./images/solution')
         raise(Exception)
     return max(0, fitness)

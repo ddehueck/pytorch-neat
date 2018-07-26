@@ -14,7 +14,18 @@ class NodeGene:
         elif self.type == 'output':
             num_out_features = 1
 
-        unit = nn.Linear(num_in_features, num_out_features, False)
+        # TODO: Examine these cases - can they be avoided?
+        elif self.type != 'output' and num_out_features == 0:
+            return None
+        elif self.type != 'input' and num_in_features == 0:
+            return None
+        try:
+            unit = nn.Linear(num_in_features, 1, False)
+        except:
+            print('Num out:', num_out_features)
+            print('Num in:',  num_in_features)
+            print('Type:',    self.type)
+            print('Id:',      self.id)
         weights = torch.cat(weights).unsqueeze(0)
 
         for p in unit.parameters():

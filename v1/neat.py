@@ -1,216 +1,148 @@
 import torch
+import numpy as np
 import random
-from .visualize import draw_net
-from .genotype.genome import Genome
-from .species import Species
+from v1.genotype.genome import Genome
+from v1.species import Species
 from copy import deepcopy
-from .experiments.xor import get_preds_and_labels
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class Neat:
+    __global_innovation_number = 0
+    current_gen_innovation = []  # Can be reset after each generation according to paper
 
-    def __init__(self, population_size, num_generations, fitness_fn):
-        self.population_size = population_size
-        self.population = self._set_population()
+    def __init__(self, config):
+        self.Config = config()
+        self.population = self.set_initial_population()
         self.species = []
-        self.fitness_fn = fitness_fn
-        self.num_generations = num_generations
+
+        for genome in self.population:
+            self.speciate(genome, 0)
 
     def run(self):
-        for i in range(self.num_generations):
+        for generation in range(1, self.Config.NUMBER_OF_GENERATIONS):
+            # Get Fitness of Every Genome
+            for genome in self.population:
+                genome.fitness = max(0, self.Config.fitness_fn(genome))
+
+            best_genome = Neat.get_best_genome(self.population)
+
+            # Reproduce
+            all_fitnesses = []
+            remaining_species = []
+
+            for species, is_stagnant in Species.stagnation(self.species, generation):
+                if is_stagnant:
+                    self.species.remove(species)
+                else:
+                    all_fitnesses.extend(g.fitness for g in species.members)
+                    remaining_species.append(species)
+
+            min_fitness = min(all_fitnesses)
+            max_fitness = max(all_fitnesses)
+
+            fit_range = max(1.0, (max_fitness-min_fitness))
+            for species in remaining_species:
+                # Set adjusted fitness
+                avg_species_fitness = np.mean([g.fitness for g in species.members])
+                species.adjusted_fitness = (avg_species_fitness - min_fitness) / fit_range
+
+            adj_fitnesses = [s.adjusted_fitness for s in remaining_species]
+            adj_fitness_sum = sum(adj_fitnesses)
+
+            # Get the number of offspring for each species
             new_population = []
+            for species in remaining_species:
+                if species.adjusted_fitness > 0:
+                    size = max(2, int((species.adjusted_fitness/adj_fitness_sum) * self.Config.POPULATION_SIZE))
+                else:
+                    size = 2
+
+                # sort current members in order of descending fitness
+                cur_members = species.members
+                cur_members.sort(key=lambda g: g.fitness, reverse=True)
+                species.members = []  # reset
+
+                # save top individual in species
+                new_population.append(cur_members[0])
+                size -= 1
+
+                # Only allow top x% to reproduce
+                purge_index = int(self.Config.PERCENTAGE_TO_SAVE * len(cur_members))
+                purge_index = max(2, purge_index)
+                cur_members = cur_members[:purge_index]
+
+                for i in range(size):
+                    parent_1 = random.choice(cur_members)
+                    parent_2 = random.choice(cur_members)
+
+                    child = self.crossover(parent_1, parent_2)
+                    self.mutate(child)
+                    new_population.append(child)
+
+            # Set new population
+            self.population = new_population
 
             # Speciate
             for genome in self.population:
-                self.speciate(genome)
+                self.speciate(genome, generation)
 
-            # Set fitnesses
-            for genome in self.population:  # TODO: Run in parallel?
-                genome.fitness = self.fitness_fn(genome)
-                genome.adjusted_fitness = genome.fitness / len(self.get_genomes_in_species(genome.species))
+            if best_genome.fitness >= 3.9:
+                return best_genome, generation
 
-            for species in self.species:
-                species_pop = self.get_genomes_in_species(species.id)
-                species.adjusted_fitness_sum = sum([g.adjusted_fitness for g in species_pop])
+        return None, None
 
-            # Reproduce
-            all_adj_fitness_sum = sum([s.adjusted_fitness_sum for s in self.species])
-            for species in self.species:
-                new_species_size = int((species.adjusted_fitness_sum / all_adj_fitness_sum) * self.population_size)
-                species_pop = self.get_genomes_in_species(species.id)
-
-                if len(species_pop) >= 5:
-                    # Maintain best genome
-                    species_champ = Neat.get_best_genome(species_pop)
-                    new_population.append(species_champ)
-                    new_species_size -= 1
-
-                    # Remove bottom 20% of population
-                    Neat._sort_by_fitness(species_pop)
-                    perc_20 = int(len(species_pop)*0.2)
-                    species_pop = species_pop[:perc_20]
-
-                for j in range(new_species_size):
-                    parent_1 = random.choice(species_pop)
-                    parent_2 = random.choice(species_pop)
-
-                    child = self.crossover(parent_1, parent_2)
-                    new_population.append(child)
-
-            # Mutate children
-            for genome in new_population:
-                self.mutate(genome)
-
-            # Save best network from this generation
-            best_genome = Neat.get_best_genome(self.population)
-
-            # Update for next generation
-            self.population = new_population
-
-            # Verbose
-            print('------------------------')
-            print("Completed generation:", i)
-            print('------------------------')
-
-            #draw_net(best_genome, view=True, show_disabled=True, filename='./images/best-genome-gen-' + str(i))
-            print('Best Genome with a fitness of:', best_genome.fitness)
-            print(best_genome)
-            preds, labels = get_preds_and_labels(best_genome)
-            print('Predictions:', str(preds))
-            print('Labels:     ', str(labels))
-            print('Num Species:', str(len(self.species)))
-
-    @staticmethod
-    def mutate(genome):
-        # 80% chance of connections being mutated
-        if Neat.weighted_rand_bool([0.8, 0.2]):
-            # 90% chance of weights being uniformly perturbed 10% chance of being replaced with a rand value
-            for connect_gene in genome.connection_genes:
-                if Neat.weighted_rand_bool([0.9, 0.1]):
-                    perturb = float(torch.rand((1, 0)))
-                    if random.choice([True, False]):
-                        perturb *= -1
-                    connect_gene.weight += perturb
-                else:
-                    connect_gene.set_weight(float(torch.normal(torch.arange(0, 1))))
-
-        # 3% chance of adding a new node
-        if Neat.weighted_rand_bool([0.03, 0.97]):
-            genome.add_node_mutation()
-
-        # 5% chance of adding a connection
-        if Neat.weighted_rand_bool([0.10, 0.90]):
-            genome.add_connection_mutation()
-
-    def speciate(self, genome):
+    def speciate(self, genome, generation):
         """
         Places Genome into proper species - index
         :param genome: Genome be speciated
         :return: None
         """
-        THRESHOLD = 3.0  # TODO: Allow configuration
         for species in self.species:
-            if Species.species_distance(genome, species.model_genome) <= THRESHOLD:
+            if Species.species_distance(genome, species.model_genome) <= self.Config.SPECIATION_THRESHOLD:
                 genome.species = species.id
+                species.members.append(genome)
                 return
 
         # Did not match any current species. Create a new one
-        new_species = Species(len(self.species), genome)
+        new_species = Species(len(self.species), genome, generation)
         genome.species = new_species.id
+        new_species.members.append(genome)
         self.species.append(new_species)
 
-        #TODO: Randomly assigned new generation individual as model species in self.species
+    def assign_new_model_genomes(self, species):
+        species_pop = self.get_genomes_in_species(species.id)
+        species.model_genome = random.choice(species_pop)
 
     def get_genomes_in_species(self, species_id):
-        genomes = []
-        for individual in self.population:
-            if individual.species == species_id:
-                genomes.append(individual)
-        return genomes
+        return [g for g in self.population if g.species == species_id]
 
-    @staticmethod
-    def get_best_genome(population):
-        best_genome = population[0]
-        for genome in population:
-            if genome.fitness > best_genome.fitness:
-                best_genome = genome
-        return best_genome
+    def mutate(self, genome):
+        """
+        Applies connection and structural mutations at proper rate.
+        Connection Mutations: Uniform Weight Perturbation or Replace Weight Value with Random Value
+        Structural Mutations: Add Connection and Add Node
+        :param genome: Genome to be mutated
+        :return: None
+        """
 
-    @staticmethod
-    def crossover(genome_1, genome_2):
-        child = Genome()
-
-        # genotype.cpp line 2043
-        # Figure out which genotype is better
-        # The worse genotype should not be allowed to add excess or disjoint genes
-        # If they are the same, use the smaller one's disjoint and excess genes
-        if genome_1.fitness == genome_2.fitness:
-            if len(genome_1.connection_genes) == len(genome_2.connection_genes):
-                # Fitness and Length equal - randomly choose best parent
-                if random.choice([True, False]):
-                    best_parent = genome_1
-                    other_parent = genome_2
+        if Neat.rand_uni_val() < self.Config.CONNECTION_MUTATION_RATE:
+            for c_gene in genome.connection_genes:
+                if Neat.rand_uni_val() < self.Config.CONNECTION_PERTURBATION_RATE:
+                    perturb = Neat.rand_uni_val() * random.choice([1, -1])
+                    c_gene.weight += perturb
                 else:
-                    best_parent = genome_2
-                    other_parent = genome_1
-            elif len(genome_1.connection_genes) < len(genome_2.connection_genes):
-                best_parent = genome_1
-                other_parent = genome_2
-            else:
-                # Genome_2 less than genome_3
-                best_parent = genome_2
-                other_parent = genome_1
-        elif genome_1.fitness > genome_2.fitness:
-            best_parent = genome_1
-            other_parent = genome_2
-        else:
-            best_parent = genome_2
-            other_parent = genome_1
+                    c_gene.set_rand_weight()
 
-        # Randomly add matching genes from both parents
-        for connect_gene in best_parent.connection_genes:
-            if connect_gene.innov_num in other_parent.get_innov_nums():
-                # Matching genes
-                if random.choice([True, False]):
-                    child_gene = deepcopy(connect_gene)
-                    if not child_gene.is_enabled:
-                        # 75% chance connection will be disabled if disabled
-                        if Neat.weighted_rand_bool([0.25, 0.75]):
-                            child_gene.is_enabled = True
-                else:
-                    child_gene = deepcopy(other_parent.get_connect_gene(connect_gene.innov_num))
-                    if not child_gene.is_enabled:
-                        # 75% chance connection will be disabled if disabled
-                        if Neat.weighted_rand_bool([0.25, 0.75]):
-                            child_gene.is_enabled = True
+        if Neat.rand_uni_val() < self.Config.ADD_NODE_MUTATION_RATE:
+            genome.add_node_mutation()
 
-                child.connection_genes.append(child_gene)
+        if Neat.rand_uni_val() < self.Config.ADD_CONNECTION_MUTATION_RATE:
+            genome.add_connection_mutation()
 
-        # Inherit disjoint and excess genes from best parent
-        for connect_gene in best_parent.connection_genes:
-            if connect_gene.innov_num not in other_parent.get_innov_nums():
-                child_gene = deepcopy(connect_gene)
-                if not child_gene.is_enabled:
-                    # 75% chance connection will be disabled if disabled
-                    if Neat.weighted_rand_bool([0.25, 0.75]):
-                        child_gene.is_enabled = True
-
-                child.connection_genes.append(child_gene)
-
-        return child
-
-    @staticmethod
-    def weighted_rand_bool(weights):
-        bool = random.choices(population=[True, False], weights=weights)[0]
-        return bool
-
-    def _set_population(self):
+    def set_initial_population(self): # TODO: Add to default config
         pop = []
-        for i in range(self.population_size):
+        for i in range(self.Config.POPULATION_SIZE):
             new_genome = Genome()
-            new_genome.fitness = 4.0  # TODO: should be based on experiment
             new_genome.add_connection_gene(0, 3)
             new_genome.add_connection_gene(1, 3)
             new_genome.add_connection_gene(2, 3) # 2 is bias
@@ -219,10 +151,106 @@ class Neat:
         return pop
 
     @staticmethod
-    def _sort_by_fitness(genome_list):
+    def rand_uni_val():
         """
-        Returns highest to lowest from left to right within the list
-        :param genome_list: List of genome objects
-        :return: None - acts on param
+        Gets a random value from a uniform distribution on the interval [0, 1]
+        :return: Float
         """
-        genome_list.sort(key=lambda g: g.fitness, reverse=True)
+        return float(torch.rand(1))
+
+    @staticmethod
+    def rand_bool():
+        return Neat.rand_uni_val() <= 0.5
+
+    @staticmethod
+    def get_best_genome(population):
+        """
+        Gets best genome out of a population
+        :param population: List of Genome instances
+        :return: Genome instance
+        """
+        population_copy = deepcopy(population)
+        population_copy.sort(key=lambda g: g.fitness, reverse=True)
+
+        return population_copy[0]
+
+    @staticmethod
+    def order_parents(parent_1, parent_2):
+        """
+        Orders parents with respect to fitness
+        :param parent_1: First Parent Genome
+        :param parent_2: Secont Parent Genome
+        :return: Two Genome Instances
+        """
+
+        # genotype.cpp line 2043
+        # Figure out which genotype is better
+        # The worse genotype should not be allowed to add excess or disjoint genes
+        # If they are the same, use the smaller one's disjoint and excess genes
+
+        best_parent = parent_1
+        other_parent = parent_2
+
+        len_parent_1 = len(parent_1.connection_genes)
+        len_parent_2 = len(parent_2.connection_genes)
+
+        if parent_1.fitness == parent_2.fitness:
+            if len_parent_1 == len_parent_2:
+                # Fitness and Length equal - randomly choose best parent
+                if Neat.rand_bool():
+                    best_parent = parent_2
+                    other_parent = parent_1
+            # Choose minimal parent
+            elif len_parent_2 < len_parent_1:
+                best_parent = parent_2
+                other_parent = parent_1
+
+        elif parent_2.fitness > parent_1.fitness:
+            best_parent = parent_2
+            other_parent = parent_1
+
+        return best_parent, other_parent
+
+    def crossover(self, genome_1, genome_2):
+        """
+        Crossovers two Genome instances as described in the original NEAT implementation
+        :param genome_1: First Genome Instance
+        :param genome_2: Second Genome Instance
+        :return: A child Genome Instance
+        """
+
+        child = Genome()
+        best_parent, other_parent = Neat.order_parents(genome_1, genome_2)
+
+        # Randomly add matching genes from both parents
+        for c_gene in best_parent.connection_genes:
+            matching_gene = other_parent.get_connect_gene(c_gene.innov_num)
+
+            if matching_gene is not None:
+                # Randomly choose where to inherit gene from
+                if Neat.rand_bool():
+                    child_gene = deepcopy(c_gene)
+                else:
+                    child_gene = deepcopy(matching_gene)
+
+            # No matching gene - is disjoint or excess
+            # Inherit disjoint and excess genes from best parent
+            else:
+                child_gene = deepcopy(c_gene)
+
+            # Apply rate of disabled gene being re-enabled
+            if not child_gene.is_enabled:
+                if Neat.rand_uni_val() <= self.Config.CROSSOVER_REENABLE_CONNECTION_GENE_RATE:
+                    child_gene.is_enabled = True
+
+            child.add_connection_copy(child_gene)
+
+        return child
+
+    @staticmethod
+    def get_new_innovation_num():
+        # Ensures that innovation numbers are being counted correctly
+        # This should be the only way to get a new innovation numbers
+        ret = Neat.__global_innovation_number
+        Neat.__global_innovation_number += 1
+        return ret

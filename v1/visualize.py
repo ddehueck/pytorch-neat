@@ -5,7 +5,7 @@ import graphviz
 
 def draw_net(genome, view=False, filename=None, node_names=None, show_disabled=False, prune_unused=False,
              node_colors=None, fmt='png'):
-    """ This is modified code originally from: https://github.com/CodeReclaimers/neat-python """
+    """ This is modified code originally from: https://github.com/CodeReclaimers/v1-python """
     """ Receives a genotype and draws a neural network with arbitrary topology. """
     # Attributes for network nodes.
     if graphviz is None:

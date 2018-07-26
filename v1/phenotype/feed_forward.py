@@ -17,56 +17,45 @@ class FeedForwardNet(nn.Module):
             self.lin_modules.append(gene.unit)
 
     def forward(self, x):
-        # Need to follow proper connections here
-        out_dict = dict()
+        outputs = dict()
+        input_nodes = [n for n in self.node_genes if n.type == 'input']
+        output_nodes = [n for n in self.node_genes if n.type == 'output']
+        stacked_nodes = self.genome.order_nodes(self.node_genes)
 
-        input_nodes = [node for node in self.node_genes if node.type == 'input']
-        for node in input_nodes:
-            # if not bias
-            if node.id != 2:
-                out_dict[node.id] = x[0][node.id]
+        # Set input values
+        for n in input_nodes:
+            if n.id == 2:
+                # Is bias
+                outputs[n.id] = torch.ones((1, 0)).to(device)[0]
             else:
-                # give bias value
-                out_dict[node.id] = torch.ones((1, 0)).to(device)[0]
+                outputs[n.id] = x[0][n.id]
 
-        # Not every node will be able to be computed first time through
-        non_input_nodes = [node for node in self.node_genes if node.type == 'hidden']
-        while len(non_input_nodes) > 0:
-            to_compute = []
+        # Compute through directed topology
+        while len(stacked_nodes) > 0:
+            current_node = stacked_nodes.pop()
 
-            for node in non_input_nodes:
-                input_nodes_ids = self.genome.get_nodes_input_nodes_ids(node.id)
+            if current_node.type != 'input':
+                # Build input vector to current node
+                inputs_ids = self.genome.get_inputs_ids(current_node.id)
+                in_vec = autograd.Variable(torch.zeros((1, len(inputs_ids)), device=device, requires_grad=True))
 
-                if self.unit_can_be_computed(input_nodes_ids, out_dict):
-                    # Compute and set in out_dict
-                    in_vec = autograd.Variable(torch.zeros((1, len(input_nodes_ids)), device=device, requires_grad=True))
-                    for i, in_node_num in enumerate(input_nodes_ids):
-                        in_vec[0][i] = out_dict[in_node_num]
+                for i, input_id in enumerate(inputs_ids):
+                    in_vec[0][i] = outputs[input_id]
 
-                    out = F.sigmoid(self.lin_modules[node.id](in_vec))  # TODO: gene-unique activations
-                    out_dict[node.id] = out
+                # Compute output of current node
+                linear_module = self.lin_modules[current_node.id]
+                if linear_module is not None:  # TODO: Can this be avoided?
+                    out = F.sigmoid(linear_module(in_vec))
+                    # Add to outputs dictionary
                 else:
-                    to_compute.append(node)
+                    out = torch.zeros((1,0))
+                outputs[current_node.id] = out
 
-            non_input_nodes = to_compute
-
-        output_nodes = [node for node in self.node_genes if node.type == 'output']
+        # Build output vector
         output = autograd.Variable(torch.zeros((1, len(output_nodes)), device=device, requires_grad=True))
-        for i, node in enumerate(output_nodes):
-            input_nodes_ids = self.genome.get_nodes_input_nodes_ids(node.id)
-
-            in_vec = autograd.Variable(torch.zeros((1, len(input_nodes_ids)), device=device, requires_grad=True))
-            for j, in_node_num in enumerate(input_nodes_ids):
-                in_vec[0][j] = out_dict[in_node_num]
-
-            out = F.sigmoid(self.lin_modules[node.id](in_vec))  # TODO: gene-unique activations
-            output[0][i] = out
-
+        for i, n in enumerate(output_nodes):
+            output[0][i] = outputs[n.id]
         return output
-
-    @staticmethod
-    def unit_can_be_computed(input_node_ids, out_dict):
-        return all(n_id in list(out_dict.keys()) for n_id in input_node_ids)
 
 
 # TODO: Multiple GPU support
