@@ -45,10 +45,11 @@ class FeedForwardNet(nn.Module):
                 # Compute output of current node
                 linear_module = self.lin_modules[current_node.id]
                 if linear_module is not None:  # TODO: Can this be avoided?
-                    out = F.sigmoid(linear_module(in_vec))
+                    lin = max(torch.ones((1, 0))*-60.0, min(torch.ones((1, 0))*60.0, 5.0 * linear_module(in_vec)))
+                    out = F.sigmoid(lin)
                     # Add to outputs dictionary
                 else:
-                    out = torch.zeros((1,0))
+                    out = torch.zeros((1, 0))
                 outputs[current_node.id] = out
 
         # Build output vector

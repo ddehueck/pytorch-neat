@@ -9,7 +9,6 @@ class XORConfig:
 
     POPULATION_SIZE = 150
     NUMBER_OF_GENERATIONS = 150
-
     SPECIATION_THRESHOLD = 3.0
 
     CONNECTION_MUTATION_RATE = 0.80
@@ -20,7 +19,7 @@ class XORConfig:
     CROSSOVER_REENABLE_CONNECTION_GENE_RATE = 0.25
 
     # Top percentage of species to be saved before mating
-    PERCENTAGE_TO_SAVE = 0.70
+    PERCENTAGE_TO_SAVE = 0.80
 
     inputs = list(map(lambda s: autograd.Variable(torch.Tensor([s])), [
         [0, 0],

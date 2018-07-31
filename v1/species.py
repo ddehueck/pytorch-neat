@@ -1,5 +1,6 @@
 import sys
 
+
 class Species:
 
     def __init__(self, id, model_genome, generation):

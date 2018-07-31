@@ -89,6 +89,12 @@ class Neat:
             if best_genome.fitness >= 3.9:
                 return best_genome, generation
 
+            # Generation Stats
+            print('Finished Generation',  generation)
+            print('Best Genome Fitness:', best_genome.fitness)
+            print('Best Genome Length',   len(best_genome.connection_genes))
+            print()
+
         return None, None
 
     def speciate(self, genome, generation):
@@ -240,7 +246,10 @@ class Neat:
 
             # Apply rate of disabled gene being re-enabled
             if not child_gene.is_enabled:
-                if Neat.rand_uni_val() <= self.Config.CROSSOVER_REENABLE_CONNECTION_GENE_RATE:
+                is_reenabeled = Neat.rand_uni_val() <= self.Config.CROSSOVER_REENABLE_CONNECTION_GENE_RATE
+                enabled_in_best_parent = best_parent.get_connect_gene(child_gene.innov_num).is_enabled
+
+                if is_reenabeled or enabled_in_best_parent:
                     child_gene.is_enabled = True
 
             child.add_connection_copy(child_gene)
