@@ -81,19 +81,21 @@ class Neat:
 
             # Set new population
             self.population = new_population
+            Neat.current_gen_innovation = []
 
             # Speciate
             for genome in self.population:
                 self.speciate(genome, generation)
 
-            if best_genome.fitness >= 3.9:
+            if best_genome.fitness >= self.Config.FITNESS_THRESHOLD:
                 return best_genome, generation
 
             # Generation Stats
-            print('Finished Generation',  generation)
-            print('Best Genome Fitness:', best_genome.fitness)
-            print('Best Genome Length',   len(best_genome.connection_genes))
-            print()
+            if self.Config.VERBOSE:
+                print('Finished Generation',  generation)
+                print('Best Genome Fitness:', best_genome.fitness)
+                print('Best Genome Length',   len(best_genome.connection_genes))
+                print()
 
         return None, None
 
@@ -101,6 +103,7 @@ class Neat:
         """
         Places Genome into proper species - index
         :param genome: Genome be speciated
+        :param generation: Number of generation this speciation is occuring at
         :return: None
         """
         for species in self.species:
@@ -149,12 +152,93 @@ class Neat:
         pop = []
         for i in range(self.Config.POPULATION_SIZE):
             new_genome = Genome()
-            new_genome.add_connection_gene(0, 3)
-            new_genome.add_connection_gene(1, 3)
-            new_genome.add_connection_gene(2, 3) # 2 is bias
+            inputs = []
+            outputs = []
+            bias = None
+
+            # Create nodes
+            for j in range(self.Config.NUM_INPUTS):
+                n = new_genome.add_node_gene('input')
+                inputs.append(n)
+
+            for j in range(self.Config.NUM_OUTPUTS):
+                n = new_genome.add_node_gene('output')
+                outputs.append(n)
+
+            if self.Config.USE_BIAS:
+                bias = new_genome.add_node_gene('bias')
+
+            # Create connections
+            for input in inputs:
+                for output in outputs:
+                    new_genome.add_connection_gene(input.id, output.id)
+
+            if bias is not None:
+                for output in outputs:
+                    new_genome.add_connection_gene(bias.id, output.id)
 
             pop.append(new_genome)
+
         return pop
+
+    def crossover(self, genome_1, genome_2):
+        """
+        Crossovers two Genome instances as described in the original NEAT implementation
+        :param genome_1: First Genome Instance
+        :param genome_2: Second Genome Instance
+        :return: A child Genome Instance
+        """
+
+        child = Genome()
+        best_parent, other_parent = Neat.order_parents(genome_1, genome_2)
+
+        # Crossover connections
+        # Randomly add matching genes from both parents
+        for c_gene in best_parent.connection_genes:
+            matching_gene = other_parent.get_connect_gene(c_gene.innov_num)
+
+            if matching_gene is not None:
+                # Randomly choose where to inherit gene from
+                if Neat.rand_bool():
+                    child_gene = deepcopy(c_gene)
+                else:
+                    child_gene = deepcopy(matching_gene)
+
+            # No matching gene - is disjoint or excess
+            # Inherit disjoint and excess genes from best parent
+            else:
+                child_gene = deepcopy(c_gene)
+
+            # Apply rate of disabled gene being re-enabled
+            if not child_gene.is_enabled:
+                is_reenabeled = Neat.rand_uni_val() <= self.Config.CROSSOVER_REENABLE_CONNECTION_GENE_RATE
+                enabled_in_best_parent = best_parent.get_connect_gene(child_gene.innov_num).is_enabled
+
+                if is_reenabeled or enabled_in_best_parent:
+                    child_gene.is_enabled = True
+
+            child.add_connection_copy(child_gene)
+
+        # Crossover Nodes
+        # Randomly add matching genes from both parents
+        for n_gene in best_parent.node_genes:
+            matching_gene = other_parent.get_node_gene(n_gene.id)
+
+            if matching_gene is not None:
+                 # Randomly choose where to inherit gene from
+                if Neat.rand_bool():
+                    child_gene = deepcopy(n_gene)
+                else:
+                    child_gene = deepcopy(matching_gene)
+
+            # No matching gene - is disjoint or excess
+            # Inherit disjoint and excess genes from best parent
+            else:
+                child_gene = deepcopy(n_gene)
+
+            child.add_node_copy(child_gene)
+
+        return child
 
     @staticmethod
     def rand_uni_val():
@@ -216,45 +300,6 @@ class Neat:
             other_parent = parent_1
 
         return best_parent, other_parent
-
-    def crossover(self, genome_1, genome_2):
-        """
-        Crossovers two Genome instances as described in the original NEAT implementation
-        :param genome_1: First Genome Instance
-        :param genome_2: Second Genome Instance
-        :return: A child Genome Instance
-        """
-
-        child = Genome()
-        best_parent, other_parent = Neat.order_parents(genome_1, genome_2)
-
-        # Randomly add matching genes from both parents
-        for c_gene in best_parent.connection_genes:
-            matching_gene = other_parent.get_connect_gene(c_gene.innov_num)
-
-            if matching_gene is not None:
-                # Randomly choose where to inherit gene from
-                if Neat.rand_bool():
-                    child_gene = deepcopy(c_gene)
-                else:
-                    child_gene = deepcopy(matching_gene)
-
-            # No matching gene - is disjoint or excess
-            # Inherit disjoint and excess genes from best parent
-            else:
-                child_gene = deepcopy(c_gene)
-
-            # Apply rate of disabled gene being re-enabled
-            if not child_gene.is_enabled:
-                is_reenabeled = Neat.rand_uni_val() <= self.Config.CROSSOVER_REENABLE_CONNECTION_GENE_RATE
-                enabled_in_best_parent = best_parent.get_connect_gene(child_gene.innov_num).is_enabled
-
-                if is_reenabeled or enabled_in_best_parent:
-                    child_gene.is_enabled = True
-
-            child.add_connection_copy(child_gene)
-
-        return child
 
     @staticmethod
     def get_new_innovation_num():

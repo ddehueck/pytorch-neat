@@ -1,5 +1,5 @@
 import v1.neat as n
-import v1.xor.config as c
+import v1.experiments.xor.config as c
 from v1.visualize import draw_net
 from tqdm import tqdm
 
@@ -14,7 +14,7 @@ avg_num_generations = 0
 min_num_generations = 100000
 
 
-for i in range(1):
+for i in tqdm(range(1)):
     neat = n.Neat(c.XORConfig)
     solution, generation = neat.run()
 
@@ -22,7 +22,7 @@ for i in range(1):
         avg_num_generations = ((avg_num_generations * num_of_solutions) + generation) / (num_of_solutions + 1)
         min_num_generations = min(generation, min_num_generations)
 
-        num_hidden_nodes = len([n for n in solution.build_nodes() if n.type == 'hidden'])
+        num_hidden_nodes = len([n for n in solution.node_genes if n.type == 'hidden'])
         avg_num_hidden_nodes = ((avg_num_hidden_nodes * num_of_solutions) + num_hidden_nodes) / (num_of_solutions + 1)
         min_hidden_nodes = min(num_hidden_nodes, min_hidden_nodes)
         max_hidden_nodes = max(num_hidden_nodes, max_hidden_nodes)
