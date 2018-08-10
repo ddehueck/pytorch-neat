@@ -19,7 +19,7 @@ Will run up-to 150 generations with an initial population of 150 genomes. Runs i
 Each experiment requries a configuration file. The XOR experiment config file is broken down here:
 
 Import necessary items.
-```
+```python
 import torch
 import torch.nn as nn
 from torch import autograd
@@ -27,7 +27,7 @@ from v1.phenotype.feed_forward import FeedForwardNet
 ```
 
 A config file consists of a Python class with certain requirnments (detailed in comments below).
-```
+```python
 class XORConfig:
     # Where to evaluate tensors
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -92,7 +92,7 @@ class XORConfig:
 
 It is **required** for an experiment's configuration class to contain a ```fitness_fn()``` method. It takes just one argument - a genome.
 
-```
+```python
     def fitness_fn(self, genome):
         fitness = 4.0  # Max fitness for XOR
 
@@ -113,7 +113,7 @@ It is **required** for an experiment's configuration class to contain a ```fitne
         return fitness
 ```
 Feel free to add additional methods for experiment-specific uses.
-```
+```python
     def get_preds_and_labels(self, genome):
         phenotype = FeedForwardNet(genome, self)
         phenotype.to(self.DEVICE)
@@ -127,7 +127,8 @@ Feel free to add additional methods for experiment-specific uses.
             labels.append(float(target))
 ```
 
-### License: MIT
+## License: MIT
+---
 Copyright (c) 2018
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
