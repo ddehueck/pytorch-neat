@@ -1,0 +1,5 @@
+graphviz==0.8.4
+gym==0.10.5
+numpy==1.14.3
+torch==0.4.1
+tqdm==4.24.0
