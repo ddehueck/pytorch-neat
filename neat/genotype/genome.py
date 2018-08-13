@@ -1,6 +1,6 @@
 import random
-from v1.genotype.connection_gene import ConnectionGene
-from v1.genotype.node_gene import NodeGene
+from neat.genotype.connection_gene import ConnectionGene
+from neat.genotype.node_gene import NodeGene
 
 
 class Genome:

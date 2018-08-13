@@ -1,9 +1,9 @@
 import gym
 import torch
-import v1.neat as n
-import v1.experiments.mountain_climbing.config as c
-from v1.visualize import draw_net
-from v1.phenotype.feed_forward import FeedForwardNet
+import neat.neat as n
+import neat.experiments.mountain_climbing.config as c
+from neat.visualize import draw_net
+from neat.phenotype.feed_forward import FeedForwardNet
 
 neat = n.Neat(c.MountainClimbConfig)
 solution, generation = neat.run()

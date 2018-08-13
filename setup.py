@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 from os import path
 from io import open
 
@@ -27,5 +27,5 @@ setup(
     ],
 
     keywords='neat pytorch neuroevolution',
-    packages=[neat]
+    packages=['neat']
 )

@@ -1,8 +1,8 @@
 import torch
 import numpy as np
 import random
-from v1.genotype.genome import Genome
-from v1.species import Species
+from neat.genotype.genome import Genome
+from neat.species import Species
 from copy import deepcopy
 
 

@@ -1,6 +1,6 @@
-import v1.neat as n
-import v1.experiments.xor.config as c
-from v1.visualize import draw_net
+import neat.neat as n
+import neat.experiments.xor.config as c
+from neat.visualize import draw_net
 from tqdm import tqdm
 
 num_of_solutions = 0

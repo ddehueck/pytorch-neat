@@ -1,13 +1,12 @@
 import torch
 import gym
-from v1.phenotype.feed_forward import FeedForwardNet
+from neat.phenotype.feed_forward import FeedForwardNet
 
 
 class PoleBalanceConfig:
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     VERBOSE = True
 
-    # Corresponds to https://github.com/openai/gym/wiki/CartPole-v0
     NUM_INPUTS = 4
     NUM_OUTPUTS = 1
     USE_BIAS = True

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import v1.activations as a
+import neat.activations as a
 from torch import autograd
 
 
