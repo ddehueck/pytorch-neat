@@ -1,5 +1,5 @@
 import torch
-import neat.neat
+import neat.population
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
@@ -38,12 +38,12 @@ class ConnectionGene:
 
     def _get_correct_innovation_num(self):
         # This method keeps track of a generation's innovations
-        for connect_gene in neat.neat.Neat.current_gen_innovation:
+        for connect_gene in neat.population.Population.current_gen_innovation:
             if self == connect_gene:
                 return connect_gene.innov_num
         # Is new innovation
-        neat.neat.Neat.current_gen_innovation.append(self)
-        return neat.neat.Neat.get_new_innovation_num()
+        neat.population.Population.current_gen_innovation.append(self)
+        return neat.population.Population.get_new_innovation_num()
 
     def __eq__(self, other):
         return (self.in_node_id == other.in_node_id) and (self.out_node_id == other.out_node_id)

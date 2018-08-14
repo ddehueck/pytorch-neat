@@ -1,11 +1,11 @@
 import gym
 import torch
-import neat.neat as n
+import neat.population as pop
 import neat.experiments.pole_balancing.config as c
 from neat.visualize import draw_net
 from neat.phenotype.feed_forward import FeedForwardNet
 
-neat = n.Neat(c.PoleBalanceConfig)
+neat = pop.Population(c.PoleBalanceConfig)
 solution, generation = neat.run()
 
 if solution is not None:

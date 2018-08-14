@@ -1,4 +1,4 @@
-import neat.neat as n
+import neat.population as pop
 import neat.experiments.xor.config as c
 from neat.visualize import draw_net
 from tqdm import tqdm
@@ -15,7 +15,7 @@ min_num_generations = 100000
 
 
 for i in tqdm(range(1)):
-    neat = n.Neat(c.XORConfig)
+    neat = pop.Population(c.XORConfig)
     solution, generation = neat.run()
 
     if solution is not None:

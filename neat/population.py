@@ -7,7 +7,7 @@ from neat.crossover import crossover
 from neat.mutation import mutate
 
 
-class Neat:
+class Population:
     __global_innovation_number = 0
     current_gen_innovation = []  # Can be reset after each generation according to paper
 
@@ -82,7 +82,7 @@ class Neat:
 
             # Set new population
             self.population = new_population
-            Neat.current_gen_innovation = []
+            Population.current_gen_innovation = []
 
             # Speciate
             for genome in self.population:
@@ -163,6 +163,6 @@ class Neat:
     def get_new_innovation_num():
         # Ensures that innovation numbers are being counted correctly
         # This should be the only way to get a new innovation numbers
-        ret = Neat.__global_innovation_number
-        Neat.__global_innovation_number += 1
+        ret = Population.__global_innovation_number
+        Population.__global_innovation_number += 1
         return ret
