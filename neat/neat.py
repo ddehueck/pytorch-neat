@@ -1,9 +1,10 @@
-import torch
-import numpy as np
 import random
+import numpy as np
+import neat.utils as utils
 from neat.genotype.genome import Genome
 from neat.species import Species
-from copy import deepcopy
+from neat.crossover import crossover
+from neat.mutation import mutate
 
 
 class Neat:
@@ -24,7 +25,7 @@ class Neat:
             for genome in self.population:
                 genome.fitness = max(0, self.Config.fitness_fn(genome))
 
-            best_genome = Neat.get_best_genome(self.population)
+            best_genome = utils.get_best_genome(self.population)
 
             # Reproduce
             all_fitnesses = []
@@ -75,8 +76,8 @@ class Neat:
                     parent_1 = random.choice(cur_members)
                     parent_2 = random.choice(cur_members)
 
-                    child = self.crossover(parent_1, parent_2)
-                    self.mutate(child)
+                    child = crossover(parent_1, parent_2, self.Config)
+                    mutate(child, self.Config)
                     new_population.append(child)
 
             # Set new population
@@ -125,30 +126,7 @@ class Neat:
     def get_genomes_in_species(self, species_id):
         return [g for g in self.population if g.species == species_id]
 
-    def mutate(self, genome):
-        """
-        Applies connection and structural mutations at proper rate.
-        Connection Mutations: Uniform Weight Perturbation or Replace Weight Value with Random Value
-        Structural Mutations: Add Connection and Add Node
-        :param genome: Genome to be mutated
-        :return: None
-        """
-
-        if Neat.rand_uni_val() < self.Config.CONNECTION_MUTATION_RATE:
-            for c_gene in genome.connection_genes:
-                if Neat.rand_uni_val() < self.Config.CONNECTION_PERTURBATION_RATE:
-                    perturb = Neat.rand_uni_val() * random.choice([1, -1])
-                    c_gene.weight += perturb
-                else:
-                    c_gene.set_rand_weight()
-
-        if Neat.rand_uni_val() < self.Config.ADD_NODE_MUTATION_RATE:
-            genome.add_node_mutation()
-
-        if Neat.rand_uni_val() < self.Config.ADD_CONNECTION_MUTATION_RATE:
-            genome.add_connection_mutation()
-
-    def set_initial_population(self): # TODO: Add to default config
+    def set_initial_population(self):
         pop = []
         for i in range(self.Config.POPULATION_SIZE):
             new_genome = Genome()
@@ -180,126 +158,6 @@ class Neat:
             pop.append(new_genome)
 
         return pop
-
-    def crossover(self, genome_1, genome_2):
-        """
-        Crossovers two Genome instances as described in the original NEAT implementation
-        :param genome_1: First Genome Instance
-        :param genome_2: Second Genome Instance
-        :return: A child Genome Instance
-        """
-
-        child = Genome()
-        best_parent, other_parent = Neat.order_parents(genome_1, genome_2)
-
-        # Crossover connections
-        # Randomly add matching genes from both parents
-        for c_gene in best_parent.connection_genes:
-            matching_gene = other_parent.get_connect_gene(c_gene.innov_num)
-
-            if matching_gene is not None:
-                # Randomly choose where to inherit gene from
-                if Neat.rand_bool():
-                    child_gene = deepcopy(c_gene)
-                else:
-                    child_gene = deepcopy(matching_gene)
-
-            # No matching gene - is disjoint or excess
-            # Inherit disjoint and excess genes from best parent
-            else:
-                child_gene = deepcopy(c_gene)
-
-            # Apply rate of disabled gene being re-enabled
-            if not child_gene.is_enabled:
-                is_reenabeled = Neat.rand_uni_val() <= self.Config.CROSSOVER_REENABLE_CONNECTION_GENE_RATE
-                enabled_in_best_parent = best_parent.get_connect_gene(child_gene.innov_num).is_enabled
-
-                if is_reenabeled or enabled_in_best_parent:
-                    child_gene.is_enabled = True
-
-            child.add_connection_copy(child_gene)
-
-        # Crossover Nodes
-        # Randomly add matching genes from both parents
-        for n_gene in best_parent.node_genes:
-            matching_gene = other_parent.get_node_gene(n_gene.id)
-
-            if matching_gene is not None:
-                 # Randomly choose where to inherit gene from
-                if Neat.rand_bool():
-                    child_gene = deepcopy(n_gene)
-                else:
-                    child_gene = deepcopy(matching_gene)
-
-            # No matching gene - is disjoint or excess
-            # Inherit disjoint and excess genes from best parent
-            else:
-                child_gene = deepcopy(n_gene)
-
-            child.add_node_copy(child_gene)
-
-        return child
-
-    @staticmethod
-    def rand_uni_val():
-        """
-        Gets a random value from a uniform distribution on the interval [0, 1]
-        :return: Float
-        """
-        return float(torch.rand(1))
-
-    @staticmethod
-    def rand_bool():
-        return Neat.rand_uni_val() <= 0.5
-
-    @staticmethod
-    def get_best_genome(population):
-        """
-        Gets best genome out of a population
-        :param population: List of Genome instances
-        :return: Genome instance
-        """
-        population_copy = deepcopy(population)
-        population_copy.sort(key=lambda g: g.fitness, reverse=True)
-
-        return population_copy[0]
-
-    @staticmethod
-    def order_parents(parent_1, parent_2):
-        """
-        Orders parents with respect to fitness
-        :param parent_1: First Parent Genome
-        :param parent_2: Secont Parent Genome
-        :return: Two Genome Instances
-        """
-
-        # genotype.cpp line 2043
-        # Figure out which genotype is better
-        # The worse genotype should not be allowed to add excess or disjoint genes
-        # If they are the same, use the smaller one's disjoint and excess genes
-
-        best_parent = parent_1
-        other_parent = parent_2
-
-        len_parent_1 = len(parent_1.connection_genes)
-        len_parent_2 = len(parent_2.connection_genes)
-
-        if parent_1.fitness == parent_2.fitness:
-            if len_parent_1 == len_parent_2:
-                # Fitness and Length equal - randomly choose best parent
-                if Neat.rand_bool():
-                    best_parent = parent_2
-                    other_parent = parent_1
-            # Choose minimal parent
-            elif len_parent_2 < len_parent_1:
-                best_parent = parent_2
-                other_parent = parent_1
-
-        elif parent_2.fitness > parent_1.fitness:
-            best_parent = parent_2
-            other_parent = parent_1
-
-        return best_parent, other_parent
 
     @staticmethod
     def get_new_innovation_num():
