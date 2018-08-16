@@ -1,5 +1,5 @@
 # PyTorch-NEAT
-A PyTorch implementation of Kenneth O. Stanley's Neuroevolution of Augmenting Topologies (NEAT) [paper](http://nn.cs.utexas.edu/downloads/papers/stanley.ec02.pdf).
+A PyTorch implementation of the NEAT (NeuroEvolution of Augmenting Topologies) method which was originally created by Kenneth O. Stanley as a principled approach to evolving neural networks. [Read the paper here](http://nn.cs.utexas.edu/downloads/papers/stanley.ec02.pdf).
 
 ### Experiments
 PyTorch currently contains three built-in experiments: XOR, Single-Pole Balancing, and Car Mountain Climbing.
