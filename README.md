@@ -126,6 +126,10 @@ Feel free to add additional methods for experiment-specific uses.
             predictions.append(float(phenotype(input)))
             labels.append(float(target))
 ```
+### Contributors
+* [Devin de Hueck](https://ddehueck.github.io/)
+* [Justin Chen](https://github.com/ch3njust1n)
+* [Lucia Vilallonga](https://github.com/ghostpress)
 
 ## License: MIT
 
