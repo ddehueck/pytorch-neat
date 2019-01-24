@@ -108,7 +108,6 @@ It is **required** for an experiment's configuration class to contain a ```fitne
             loss = float(loss)
 
             fitness -= loss
-            # loss = criterion(pred, target)
 
         return fitness
 ```
