@@ -1,7 +1,11 @@
 import torch
 import torch.nn as nn
+
 import neat.activations as a
-from torch import autograd
+
+
+dtype = torch.float64
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class FeedForwardNet(nn.Module):
@@ -9,57 +13,44 @@ class FeedForwardNet(nn.Module):
     def __init__(self, genome, config):
         super(FeedForwardNet, self).__init__()
         self.genome = genome
+        self.config = config
         self.units = self.build_units()
         self.lin_modules = nn.ModuleList()
-        self.config = config
         self.activation = a.Activations().get(config.ACTIVATION)
-
-        for unit in self.units:
-            self.lin_modules.append(unit.linear)
+        self.bias_indices = [u.ref_node.id for u in self.units if u.is_bias()]
+        self.input_indices = torch.tensor([u.ref_node.id for u in self.units if u.is_input()], device=device)
+        self.output_indices = torch.tensor([u.ref_node.id for u in self.units if u.is_output()], device=device)
+        self.stacked_units = self.genome.order_units(self.units)
+        self.units_indexes = {u.ref_node.id: k for k, u in enumerate(self.units)}
+        self.units_input_indices = [
+            torch.tensor(self.genome.get_inputs_ids(u.ref_node.id), dtype=torch.long, device=device) for u in self.units
+        ]
+        self.extras_len = len(self.units) - len(self.input_indices)
+        self.build_modules()
 
     def forward(self, x):
-        outputs = dict()
-        input_units = [u for u in self.units if u.ref_node.type == 'input']
-        output_units = [u for u in self.units if u.ref_node.type == 'output']
-        bias_units = [u for u in self.units if u.ref_node.type == 'bias']
-        stacked_units = self.genome.order_units(self.units)
-
-        # Set input values
-        for u in input_units:
-            outputs[u.ref_node.id] = x[0][u.ref_node.id]
-
-        # Set bias value
-        for u in bias_units:
-            outputs[u.ref_node.id] = torch.ones((1, 0)).to(device)[0]
+        inputs = torch.index_select(x, 1, self.input_indices)
+        extras = torch.ones((1, self.extras_len), dtype=dtype, device=device)
+        output_tensor = torch.cat((inputs, extras), 1)
+        # assert output_tensor.size(1) == len(self.units)
 
         # Compute through directed topology
-        while len(stacked_units) > 0:
-            current_unit = stacked_units.pop()
-
-            if current_unit.ref_node.type != 'input' and current_unit.ref_node.type != 'bias':
+        for current_unit in reversed(self.stacked_units):
+            if not current_unit.is_input() and not current_unit.is_bias():
+                # Get unit output index.
+                unit_index = self.units_indexes[current_unit.ref_node.id]
                 # Build input vector to current node
-                inputs_ids = self.genome.get_inputs_ids(current_unit.ref_node.id)
-                in_vec = autograd.Variable(torch.zeros((1, len(inputs_ids)), device=device, requires_grad=True))
-
-                for i, input_id in enumerate(inputs_ids):
-                    in_vec[0][i] = outputs[input_id]
-
+                inputs_ids = self.units_input_indices[unit_index]
+                in_vec = torch.index_select(output_tensor, 1, inputs_ids)
                 # Compute output of current node
-                linear_module = self.lin_modules[self.units.index(current_unit)]
-                if linear_module is not None:  # TODO: Can this be avoided?
-                    scaled = self.config.SCALE_ACTIVATION * linear_module(in_vec)
-                    out = self.activation(scaled)
-                else:
-                    out = torch.zeros((1, 0))
+                scaled = self.config.SCALE_ACTIVATION * current_unit.linear(in_vec)
+                # Set output after activation
+                output_tensor[0][unit_index] = self.activation(scaled)
+        return torch.index_select(output_tensor, 1, self.output_indices)
 
-                # Add to outputs dictionary
-                outputs[current_unit.ref_node.id] = out
-
-        # Build output vector
-        output = autograd.Variable(torch.zeros((1, len(output_units)), device=device, requires_grad=True))
-        for i, u in enumerate(output_units):
-            output[0][i] = outputs[u.ref_node.id]
-        return output
+    def build_modules(self):
+        for unit in self.units:
+            self.lin_modules.append(unit.linear)
 
     def build_units(self):
         units = []
@@ -82,20 +73,28 @@ class Unit:
         self.ref_node = ref_node
         self.linear = self.build_linear(num_in_features)
 
+    def is_input(self):
+        return self.ref_node.type == 'input'
+
+    def is_output(self):
+        return self.ref_node.type == 'output'
+
+    def is_bias(self):
+        return self.ref_node.type == 'bias'
+
+    def is_hidden(self):
+        return self.ref_node.type == 'hidden'
+
     def set_weights(self, weights):
-        if self.ref_node.type != 'input' and self.ref_node.type != 'bias':
+        if not self.is_input() and not self.is_bias():
             weights = torch.cat(weights).unsqueeze(0)
             for p in self.linear.parameters():
                 p.data = weights
 
     def build_linear(self, num_in_features):
-        if self.ref_node.type == 'input' or self.ref_node.type == 'bias':
+        if self.is_input() or self.is_bias():
             return None
         return nn.Linear(num_in_features, 1, False)
 
     def __str__(self):
-        return 'Reference Node: ' + str(self.ref_node) + '\n'
-
-
-# TODO: Multiple GPU support get from config
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        return 'Reference Node: {}\n'.format(self.ref_node)
