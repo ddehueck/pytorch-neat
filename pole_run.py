@@ -22,7 +22,7 @@ if solution is not None:
 
     while not done:
         env.render()
-        input = torch.Tensor([observation]).to(c.PoleBalanceConfig.DEVICE)
+        input = torch.tensor([observation], device=c.DEVICE)
 
         pred = round(float(phenotype(input)))
         observation, reward, done, info = env.step(pred)

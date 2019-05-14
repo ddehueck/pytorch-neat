@@ -24,7 +24,7 @@ class Genome:
         potential_inputs = [n.id for n in self.node_genes if n.type != 'output']
         potential_outputs = [n.id for n in self.node_genes if n.type != 'input' and n.type != 'bias']
 
-        if len(potential_outputs) is not 0 and len(potential_inputs) is not 0:
+        if len(potential_outputs) != 0 and len(potential_inputs) != 0:
             node_in_id = random.choice(potential_inputs)
             node_out_id = random.choice(potential_outputs)
 

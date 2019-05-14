@@ -47,7 +47,7 @@ class PoleBalanceConfig:
         phenotype = FeedForwardNet(genome, self)
 
         while not done:
-            input = torch.Tensor([observation]).to(self.DEVICE)
+            input = torch.tensor([observation], device=self.DEVICE)
 
             pred = round(float(phenotype(input)))
             observation, reward, done, info = env.step(pred)

@@ -1,5 +1,9 @@
 import torch
-import neat.population
+
+from neat import population
+
+
+dtype = torch.float64
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
@@ -11,7 +15,6 @@ class ConnectionGene:
         self.is_enabled = is_enabled
         self.innov_num = self._get_correct_innovation_num()
         self.weight = None
-
         self.set_rand_weight()
 
     def set_weight(self, new_weight):
@@ -20,14 +23,14 @@ class ConnectionGene:
         :param new_weight: type float
         :return: None
         """
-        self.weight = torch.Tensor([new_weight]).to(device)
+        self.weight = torch.tensor([new_weight], dtype=dtype, device=device)
 
     def set_rand_weight(self):
         """
         Weight is set to a random value
         :return: None - modifies object
         """
-        self.weight = torch.Tensor(torch.normal(torch.arange(0, 1))).to(device)
+        self.weight = torch.normal(torch.arange(0, 1, dtype=dtype, device=device))
 
     def set_innov_num(self, num):
         """
@@ -38,15 +41,17 @@ class ConnectionGene:
 
     def _get_correct_innovation_num(self):
         # This method keeps track of a generation's innovations
-        for connect_gene in neat.population.Population.current_gen_innovation:
+        for connect_gene in population.Population.current_gen_innovation:
             if self == connect_gene:
                 return connect_gene.innov_num
         # Is new innovation
-        neat.population.Population.current_gen_innovation.append(self)
-        return neat.population.Population.get_new_innovation_num()
+        population.Population.current_gen_innovation.append(self)
+        return population.Population.get_new_innovation_num()
 
     def __eq__(self, other):
         return (self.in_node_id == other.in_node_id) and (self.out_node_id == other.out_node_id)
 
     def __str__(self):
-        return 'In: ' + str(self.in_node_id) + '\nOut: ' + str(self.out_node_id) + '\nIs Enabled: ' + str(self.is_enabled) + '\nInnovation #: ' + str(self.innov_num) + '\nWeight: ' + str(float(self.weight)) + '\n'
+        return 'In: ' + str(self.in_node_id) + '\nOut: ' + str(self.out_node_id) + \
+            '\nIs Enabled: ' + str(self.is_enabled) + '\nInnovation #: ' + str(self.innov_num) + \
+            '\nWeight: ' + str(float(self.weight)) + '\n'
