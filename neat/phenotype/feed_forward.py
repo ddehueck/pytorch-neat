@@ -30,7 +30,7 @@ class FeedForwardNet(nn.Module):
 
         # Set bias value
         for u in bias_units:
-            outputs[u.ref_node.id] = torch.ones((1, 0)).to(device)[0]
+            outputs[u.ref_node.id] = torch.ones((1, 1)).to(device)[0][0]
 
         # Compute through directed topology
         while len(stacked_units) > 0:
@@ -50,7 +50,7 @@ class FeedForwardNet(nn.Module):
                     scaled = self.config.SCALE_ACTIVATION * linear_module(in_vec)
                     out = self.activation(scaled)
                 else:
-                    out = torch.zeros((1, 0))
+                    out = torch.zeros((1, 1))
 
                 # Add to outputs dictionary
                 outputs[current_unit.ref_node.id] = out
