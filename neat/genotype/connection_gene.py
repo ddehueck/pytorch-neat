@@ -27,7 +27,7 @@ class ConnectionGene:
         Weight is set to a random value
         :return: None - modifies object
         """
-        self.weight = torch.Tensor(torch.normal(torch.arange(0, 1))).to(device)
+        self.weight = torch.Tensor(torch.normal(torch.arange(0, 1).float())).to(device)
 
     def set_innov_num(self, num):
         """
