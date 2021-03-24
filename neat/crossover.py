@@ -7,10 +7,14 @@ Todo:
     * Allow other types of crossover?
 
 """
-
+import logging
 from copy import deepcopy
+
 import neat.utils as utils
 from neat.genotype.genome import Genome
+
+
+logger = logging.getLogger(__name__)
 
 
 def crossover(genome_1, genome_2, config):

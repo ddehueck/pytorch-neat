@@ -1,7 +1,11 @@
+import logging
 import torch
 import torch.nn as nn
 import neat.activations as a
 from torch import autograd
+
+
+logger = logging.getLogger(__name__)
 
 
 class FeedForwardNet(nn.Module):

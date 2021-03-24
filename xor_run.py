@@ -1,7 +1,11 @@
+import logging
+
 import neat.population as pop
 import neat.experiments.xor.config as c
 from neat.visualize import draw_net
 from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 num_of_solutions = 0
 
@@ -32,10 +36,10 @@ for i in tqdm(range(1)):
         num_of_solutions += 1
         draw_net(solution, view=True, filename='./images/solution-' + str(num_of_solutions), show_disabled=True)
 
-print('Total Number of Solutions: ', num_of_solutions)
-print('Average Number of Hidden Nodes in a Solution', avg_num_hidden_nodes)
-print('Solution found on average in:', avg_num_generations, 'generations')
-print('Minimum number of hidden nodes:', min_hidden_nodes)
-print('Maximum number of hidden nodes:', max_hidden_nodes)
-print('Minimum number of generations:', min_num_generations)
-print('Found minimal solution:', found_minimal_solution, 'times')
+logger.info('Total Number of Solutions: ', num_of_solutions)
+logger.info('Average Number of Hidden Nodes in a Solution', avg_num_hidden_nodes)
+logger.info('Solution found on average in:', avg_num_generations, 'generations')
+logger.info('Minimum number of hidden nodes:', min_hidden_nodes)
+logger.info('Maximum number of hidden nodes:', max_hidden_nodes)
+logger.info('Minimum number of generations:', min_num_generations)
+logger.info('Found minimal solution:', found_minimal_solution, 'times')

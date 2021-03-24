@@ -1,15 +1,22 @@
+import logging
+
 import gym
 import torch
+
 import neat.population as pop
 import neat.experiments.mountain_climbing.config as c
 from neat.visualize import draw_net
 from neat.phenotype.feed_forward import FeedForwardNet
 
+
+logger = logging.getLogger(__name__)
+
+logger.info(c.PoleBalanceConfig.DEVICE)
 neat = pop.Population(c.MountainClimbConfig)
 solution, generation = neat.run()
 
 if solution is not None:
-    print('Found a Solution')
+    logger.info('Found a Solution')
     draw_net(solution, view=True, filename='./images/mountain-climb-solution', show_disabled=True)
 
     # OpenAI Gym

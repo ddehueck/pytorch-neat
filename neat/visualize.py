@@ -1,6 +1,10 @@
-from __future__ import print_function
+import logging
 import warnings
+
 import graphviz
+
+
+logger = logging.getLogger(__name__)
 
 
 def draw_net(genome, view=False, filename=None, node_names=None, show_disabled=False, node_colors=None, fmt='png'):
