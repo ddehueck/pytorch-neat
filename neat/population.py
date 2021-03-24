@@ -1,10 +1,16 @@
+import logging
 import random
+
 import numpy as np
+
 import neat.utils as utils
 from neat.genotype.genome import Genome
 from neat.species import Species
 from neat.crossover import crossover
 from neat.mutation import mutate
+
+
+logger = logging.getLogger(__name__)
 
 
 class Population:
@@ -93,10 +99,9 @@ class Population:
 
             # Generation Stats
             if self.Config.VERBOSE:
-                print('Finished Generation',  generation)
-                print('Best Genome Fitness:', best_genome.fitness)
-                print('Best Genome Length',   len(best_genome.connection_genes))
-                print()
+                logger.info(f'Finished Generation {generation}')
+                logger.info(f'Best Genome Fitness: {best_genome.fitness}')
+                logger.info(f'Best Genome Length {len(best_genome.connection_genes)}\n')
 
         return None, None
 

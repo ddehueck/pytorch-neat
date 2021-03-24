@@ -1,12 +1,14 @@
-import torch.nn.functional as F
+import logging
+
+import torch
 
 
 def sigmoid(x):
-    return F.sigmoid(x)
+    return torch.sigmoid(x)
 
 
 def tanh(x):
-    return F.tanh(x)
+    return torch.tanh(x)
 
 
 class Activations:
