@@ -11,7 +11,7 @@ from neat.phenotype.feed_forward import FeedForwardNet
 
 logger = logging.getLogger(__name__)
 
-logger.info(c.PoleBalanceConfig.DEVICE)
+logger.info(c.MountainClimbConfig.DEVICE)
 neat = pop.Population(c.MountainClimbConfig)
 solution, generation = neat.run()
 
