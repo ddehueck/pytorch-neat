@@ -5,6 +5,8 @@ from neat.phenotype.feed_forward import FeedForwardNet
 # Import the MNIST dataset from torchvision
 from torchvision import datasets, transforms
 
+from matplotlib import pyplot as plt
+
 
 
 
@@ -35,14 +37,41 @@ class MNISTConfig:
     # Top percentage of species to be saved before mating
     PERCENTAGE_TO_SAVE = 0.30
 
-    inputs = list(map(lambda s: autograd.Variable(torch.Tensor([s])), [
-        [0, 0],
-        [0, 1],
-        [1, 0],
-        [1, 1]
-    ]))
+    mnist_data = datasets.MNIST(root="./data", train=True, download=True)
+    train = mnist_data.train_data
+    # Convert to grayscale
+    # train = transforms.Grayscale(num_output_channels=1)(train)
+    train = train.view(train.size(0), -1).float()
+    train = train / 255
+    train_labels = mnist_data.train_labels
+    test = mnist_data.test_data
+    # test = transforms.Grayscale(num_output_channels=1)(test)
+    test = test.view(test.size(0), -1).float()
+    test = test / 255
+    test_labels = mnist_data.test_labels
+    
+    # Convert to grayscale
 
-    targets = list(map(lambda s: autograd.Variable(torch.Tensor([s])), [[0],[1],[1],[0]]))
+
+    # Show the first image in the training set
+    plt.imshow(train[0].view(28, 28))
+    plt.show()
+
+    # Print the shape of the train dataset
+    print("Train shape:", train.shape)
+    # Print the shape of the test dataset
+    print("Test shape:", test.shape)
+    
+
+    # Split all of the examples into a python list
+    inputs = torch.split(train, 1, dim=0)
+    # print(len(inputs))
+    # exit()
+    targets = torch.split(train_labels, 1, dim=0)
+    # print(len(targets))
+    # exit()
+
+    # targets = list(map(lambda s: torch.Tensor([s]), [[0],[1],[1],[0]]))
     # Print the targets
     print(targets)
 
