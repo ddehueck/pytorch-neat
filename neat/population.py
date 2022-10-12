@@ -28,8 +28,17 @@ class Population:
     def run(self):
         for generation in range(1, self.Config.NUMBER_OF_GENERATIONS):
             # Get Fitness of Every Genome
-            for genome in self.population:
-                genome.fitness = max(0, self.Config.fitness_fn(genome))
+            if hasattr(self.Config, 'eval_genomes'):
+                self.Config.eval_genomes(self.population)
+                for genome in self.population:
+                    genome.fitness = max(0, genome.fitness)
+            elif hasattr(self.Config, 'fitness_fn'):
+                for genome in self.population:
+                    genome.fitness = max(0, self.Config.fitness_fn(genome))
+            else:
+                raise RuntimeError(
+                    'Config does not have fitness_fn or eval_genomes!',
+                )
 
             best_genome = utils.get_best_genome(self.population)
 
@@ -50,8 +59,10 @@ class Population:
             fit_range = max(1.0, (max_fitness-min_fitness))
             for species in remaining_species:
                 # Set adjusted fitness
-                avg_species_fitness = np.mean([g.fitness for g in species.members])
-                species.adjusted_fitness = (avg_species_fitness - min_fitness) / fit_range
+                avg_species_fitness = np.mean(
+                    [g.fitness for g in species.members])
+                species.adjusted_fitness = (
+                    avg_species_fitness - min_fitness) / fit_range
 
             adj_fitnesses = [s.adjusted_fitness for s in remaining_species]
             adj_fitness_sum = sum(adj_fitnesses)
@@ -60,7 +71,8 @@ class Population:
             new_population = []
             for species in remaining_species:
                 if species.adjusted_fitness > 0:
-                    size = max(2, int((species.adjusted_fitness/adj_fitness_sum) * self.Config.POPULATION_SIZE))
+                    size = max(2, int((species.adjusted_fitness /
+                               adj_fitness_sum) * self.Config.POPULATION_SIZE))
                 else:
                     size = 2
 
@@ -74,7 +86,8 @@ class Population:
                 size -= 1
 
                 # Only allow top x% to reproduce
-                purge_index = int(self.Config.PERCENTAGE_TO_SAVE * len(cur_members))
+                purge_index = int(
+                    self.Config.PERCENTAGE_TO_SAVE * len(cur_members))
                 purge_index = max(2, purge_index)
                 cur_members = cur_members[:purge_index]
 
@@ -101,7 +114,8 @@ class Population:
             if self.Config.VERBOSE:
                 logger.info(f'Finished Generation {generation}')
                 logger.info(f'Best Genome Fitness: {best_genome.fitness}')
-                logger.info(f'Best Genome Length {len(best_genome.connection_genes)}\n')
+                logger.info(
+                    f'Best Genome Length {len(best_genome.connection_genes)}\n')
 
         return None, None
 
