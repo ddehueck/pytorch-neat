@@ -2,7 +2,7 @@ from neat.phenotype.feed_forward import FeedForwardNet
 import numpy as np
 
 
-class EnsembleFeedForward():
+class EnsembleFeedForwardNet():
     def __init__(self, genomes, config):
         self.phenotypes = [FeedForwardNet(genome, config)
                            for genome in genomes]
