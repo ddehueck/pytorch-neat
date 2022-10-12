@@ -2,7 +2,9 @@ import logging
 import copy
 
 import torch
+import numpy as np
 
+from neat.phenotype.feed_forward import FeedForwardNet
 
 logger = logging.getLogger(__name__)
 
@@ -33,3 +35,17 @@ def get_best_genome(population):
     population_copy.sort(key=lambda g: g.fitness, reverse=True)
 
     return population_copy[0]
+
+
+def cache_genomes_results(genomes, dataset, config):
+    genomes_to_results = {}
+    for genome in genomes:
+        results = []
+        phenotype = FeedForwardNet(genome, config)
+        phenotype.to(config.DEVICE)
+        for input in dataset:
+            input.to(config.DEVICE)
+            prediction = phenotype(input)
+            results.append(prediction.numpy())
+        genomes_to_results[genome] = np.array(results)
+    return genomes_to_results
