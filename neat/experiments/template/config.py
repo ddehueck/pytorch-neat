@@ -24,6 +24,7 @@ class TemplateConfig:
         
         #ENSEMBLE KWARGS
         self.GENERATIONAL_ENSEMBLE_SIZE = kwargs['ENSEMBLE_SIZE']
+        self.CANDIDATE_LIMIT = kwargs['CANDIDATE_LIMIT']
 
         self.ACTIVATION = kwargs['ACTIVATION']
         self.SCALE_ACTIVATION = kwargs['SCALE_ACTIVATION']
@@ -45,62 +46,75 @@ class TemplateConfig:
         self.PERCENTAGE_TO_SAVE = kwargs['PERCENTAGE_TO_SAVE']
 
 
-    def fitness_fn(self, genome):
+    # def fitness_fn(self, genome):
 
-        phenotype = FeedForwardNet(genome, self)
-        phenotype.to(self.DEVICE)
-        fitness = np.inf
+    #     phenotype = FeedForwardNet(genome, self)
+    #     phenotype.to(self.DEVICE)
+    #     fitness = np.inf
 
-        for input, target in zip(self.inputs, self.targets):  # 4 training examples
-            input, target = input.to(self.DEVICE), target.to(self.DEVICE)
+    #     for input, target in zip(self.inputs, self.targets):  # 4 training examples
+    #         input, target = input.to(self.DEVICE), target.to(self.DEVICE)
 
-            print(input.shape)
-            pred = phenotype(input)
-            # Run softmax on the output
-            pred = nn.functional.softmax(pred, dim=0)
-            # Get the index of the max log-probability
-            # pred = pred.argmax(dim=0, keepdim=True)
-            # Compute the loss
-            print("Pred:", pred.shape)
-            print("Target:", target.shape)
+    #         print(input.shape)
+    #         pred = phenotype(input)
+    #         # Run softmax on the output
+    #         pred = nn.functional.softmax(pred, dim=0)
+    #         # Get the index of the max log-probability
+    #         # pred = pred.argmax(dim=0, keepdim=True)
+    #         # Compute the loss
+    #         print("Pred:", pred.shape)
+    #         print("Target:", target.shape)
 
-            pred = pred.reshape(10)
-            # Convert pred to long
-            pred = pred
+    #         pred = pred.reshape(10)
+    #         # Convert pred to long
+    #         pred = pred
 
-            target = target.reshape(10)
-            # Convert target to long
-            target = target
+    #         target = target.reshape(10)
+    #         # Convert target to long
+    #         target = target
 
 
-            # Compute the loss
-            loss = nn.functional.mse_loss(pred, target)
+    #         # Compute the loss
+    #         loss = nn.functional.mse_loss(pred, target)
 
-            # Compute the fitness
-            fitness -= loss.item()
-            # loss = criterion(pred, target)
+    #         # Compute the fitness
+    #         fitness -= loss.item()
+    #         # loss = criterion(pred, target)
 
-        return fitness
+    #     return fitness
 
     def eval_genomes(self, genomes):
+
+        #GET RID OF THIS | REPLACE WITH ALG SELECTED BY KWARG
+        def softmax(x):
+            """Compute softmax values for each sets of scores in x."""
+            return np.exp(x)/np.sum(np.exp(x),axis=0)
+
+        def cross_entropy(y,y_pred):
+            loss=-np.sum(y*np.log(y_pred))
+            return loss/float(y_pred.shape[0])
         
         dataset = [] #TODO get [tensors] self.DATASET
+        y = [] #TDOD get [actuals]
 
         activations_map = create_prediction_map(genomes, dataset, self)
 
         for genome in genomes:
-            sample_ensembles = random_ensemble_generator_for_static_genome(genome, genomes, k = self.GENERATIONAL_ENSEMBLE_SIZE) #Returns dict {genome:activations}
+            constituent_ensemble_losses = []
+            #Iterate through a sample of all possible combinations of candidate genomes to ensemble for a given size k
+            for sample_ensemble in random_ensemble_generator_for_static_genome(genome, genomes, k = self.GENERATIONAL_ENSEMBLE_SIZE, limit = self.CANDIDATE_LIMIT): #Returns limit length iterable of array of size k of dict {genome:activations} 
+                #Append given genome activations to list
+                ensemble_activations = [activations_map[genome]]
+                #Append candidate genome activations to list
+                for candidate in sample_ensemble:
+                    ensemble_activations.append(activations_map[candidate])
+                average_ensemble_activations = np.mean(ensemble_activations, axis = 0)
+                ensemble_predictions = np.array([softmax(a) for a in average_ensemble_activations]) #TODO Replace with function specified by config kwarg 
+                constituent_ensemble_loss = cross_entropy(y,ensemble_predictions) 
+                constituent_ensemble_losses.append(constituent_ensemble_loss)
+            #set the genome fitness as the average loss of the candidate ensembles TODO use kwarg switching for fitness_fn
+            genome.fitness = np.mean(constituent_ensemble_losses)
+        
+        population_fitness = np.mean([genome.fitness for genome in genomes])
 
-    def get_preds_and_labels(self, genome):
-        phenotype = FeedForwardNet(genome, self)
-        phenotype.to(self.DEVICE)
-
-        predictions = []
-        labels = []
-        for input, target in zip(self.inputs, self.targets):  # 4 training examples
-            input, target = input.to(self.DEVICE), target.to(self.DEVICE)
-
-            predictions.append(float(phenotype(input)))
-            labels.append(float(target))
-
-        return predictions, labels
+        return population_fitness
