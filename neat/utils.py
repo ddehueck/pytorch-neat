@@ -39,7 +39,7 @@ def get_best_genome(population):
     return population_copy[0]
 
 
-def cache_genomes_results(genomes, dataset, config):
+def create_prediction_map(genomes, dataset, config):
     '''
     Creates a prediction mapping of genomes to their 2D arrays of predictions
 
@@ -67,7 +67,7 @@ def cache_genomes_results(genomes, dataset, config):
     return genomes_to_results
 
 
-def ensemble_generator(genomes, k=None, limit=None):
+def random_ensemble_generator(genomes, k=None, limit=None):
     '''
     A generator that randomly picks an ensemble from the given genomes of length k
 
@@ -98,7 +98,7 @@ def ensemble_generator(genomes, k=None, limit=None):
             yield ensemble
 
 
-def ensemble_generator_for_static_genome(genome, genomes, k=None, limit=None):
+def random_ensemble_generator_for_static_genome(genome, genomes, k=None, limit=None):
     '''
     A generator that randomly picks the rest of an ensemble of size k including a given genome
 
@@ -113,5 +113,5 @@ def ensemble_generator_for_static_genome(genome, genomes, k=None, limit=None):
     '''
     genomes = [g for g in genomes if g != genome]
     k = None if k is None else k - 1
-    for ensemble in ensemble_generator(genomes=genomes, k=k, limit=limit):
+    for ensemble in random_ensemble_generator(genomes=genomes, k=k, limit=limit):
         yield {genome, *ensemble}
