@@ -1,0 +1,24 @@
+default_kwarg = { 
+        
+        'USE_BIAS' : True, 
+
+        'ACTIVATION' : 'sigmoid',
+        'SCALE_ACTIVATION' : 4.9,
+
+        'FITNESS_THRESHOLD' : 0.8,
+
+        'POPULATION_SIZE' : 100,
+        'NUMBER_OF_GENERATIONS' : 10,
+        'SPECIATION_THRESHOLD' : 3.0,
+
+        'CONNECTION_MUTATION_RATE' : 0.80,
+        'CONNECTION_PERTURBATION_RATE' : 0.90,
+        'ADD_NODE_MUTATION_RATE' : 0.03,
+        'ADD_CONNECTION_MUTATION_RATE' : 0.5,
+
+        'CROSSOVER_REENABLE_CONNECTION_GENE_RATE' : 0.25,
+
+        'PERCENTAGE_TO_SAVE' : 0.80
+
+}        
+        
