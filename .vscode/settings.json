@@ -1,5 +1,7 @@
 {
     "python.analysis.extraPaths": [
         "./neat"
-    ]
+    ],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.formatting.provider": "black"
 }
