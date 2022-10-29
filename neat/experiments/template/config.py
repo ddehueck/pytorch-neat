@@ -45,44 +45,6 @@ class TemplateConfig:
         # Top percentage of species to be saved before mating
         self.PERCENTAGE_TO_SAVE = kwargs['PERCENTAGE_TO_SAVE']
 
-
-    # def fitness_fn(self, genome):
-
-    #     phenotype = FeedForwardNet(genome, self)
-    #     phenotype.to(self.DEVICE)
-    #     fitness = np.inf
-
-    #     for input, target in zip(self.inputs, self.targets):  # 4 training examples
-    #         input, target = input.to(self.DEVICE), target.to(self.DEVICE)
-
-    #         print(input.shape)
-    #         pred = phenotype(input)
-    #         # Run softmax on the output
-    #         pred = nn.functional.softmax(pred, dim=0)
-    #         # Get the index of the max log-probability
-    #         # pred = pred.argmax(dim=0, keepdim=True)
-    #         # Compute the loss
-    #         print("Pred:", pred.shape)
-    #         print("Target:", target.shape)
-
-    #         pred = pred.reshape(10)
-    #         # Convert pred to long
-    #         pred = pred
-
-    #         target = target.reshape(10)
-    #         # Convert target to long
-    #         target = target
-
-
-    #         # Compute the loss
-    #         loss = nn.functional.mse_loss(pred, target)
-
-    #         # Compute the fitness
-    #         fitness -= loss.item()
-    #         # loss = criterion(pred, target)
-
-    #     return fitness
-
     def eval_genomes(self, genomes):
 
         #GET RID OF THIS | REPLACE WITH ALG SELECTED BY KWARG
