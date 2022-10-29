@@ -5,7 +5,7 @@ import torch
 
 import neat.population as pop
 import neat.experiments.pole_balancing.config as c
-#from neat.visualize import draw_net
+from neat.visualize import draw_net
 from neat.phenotype.feed_forward import FeedForwardNet
 
 
@@ -17,7 +17,7 @@ solution, generation = neat.run()
 
 if solution is not None:
     logger.info('Found a Solution')
-    #draw_net(solution, view=True, filename='./images/pole-balancing-solution', show_disabled=True)
+    draw_net(solution, view=True, filename='./images/pole-balancing-solution', show_disabled=True)
 
     # OpenAI Gym
     env = gym.make('LongCartPole-v0')
