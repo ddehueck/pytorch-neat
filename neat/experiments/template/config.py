@@ -13,37 +13,10 @@ class TemplateConfig:
     def __init__(self, **kwargs):
 
         self.DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.VERBOSE = True
 
-        #DATASET KWARGS
-        self.DATASET = kwargs['DATASET']
+        for k, v in kwargs.items(): 
+            setattr(self, k, v)
 
-        self.NUM_INPUTS = kwargs['NUM_INPUTS']
-        self.NUM_OUTPUTS = kwargs['NUM_OUTPUTS']
-        self.USE_BIAS = kwargs['USE_BIAS']
-        
-        #ENSEMBLE KWARGS
-        self.GENERATIONAL_ENSEMBLE_SIZE = kwargs['ENSEMBLE_SIZE']
-        self.CANDIDATE_LIMIT = kwargs['CANDIDATE_LIMIT']
-
-        self.ACTIVATION = kwargs['ACTIVATION']
-        self.SCALE_ACTIVATION = kwargs['SCALE_ACTIVATION']
-
-        self.FITNESS_THRESHOLD = kwargs['FITNESS_THRESHOLD']
-
-        self.POPULATION_SIZE = kwargs['POPULATION_SIZE']
-        self.NUMBER_OF_GENERATIONS = kwargs['NUMBER_OF_GENERATIONS']
-        self.SPECIATION_THRESHOLD = kwargs['POPULATION_SIZE']
-
-        self.CONNECTION_MUTATION_RATE = kwargs['CONNECTION_MUTATION_RATE']
-        self.CONNECTION_PERTURBATION_RATE = kwargs['CONNECTION_PERTURBATION_RATE']
-        self.ADD_NODE_MUTATION_RATE = kwargs['ADD_NODE_MUTATION_RATE']
-        self.ADD_CONNECTION_MUTATION_RATE = kwargs['ADD_CONNECTION_MUTATION_RATE']
-
-        self.CROSSOVER_REENABLE_CONNECTION_GENE_RATE = kwargs['CROSSOVER_REENABLE_CONNECTION_GENE_RATE']
-
-        # Top percentage of species to be saved before mating
-        self.PERCENTAGE_TO_SAVE = kwargs['PERCENTAGE_TO_SAVE']
 
     def eval_genomes(self, genomes):
 

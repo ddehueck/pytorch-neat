@@ -1,6 +1,15 @@
-default_kwarg = { 
-        
+DEFAULT_KWARGS = { 
+
+        'VERBOSE' : True,
+
+        'DATASET' : None,
+
+        'NUM_INPUTS' : None,
+        'NUM_OUTPUTS' : None,
         'USE_BIAS' : True, 
+
+        'ENSEMBLE_SIZE' : 3,
+        'CANDIDATE_LIMIT' : None,
 
         'ACTIVATION' : 'sigmoid',
         'SCALE_ACTIVATION' : 4.9,
