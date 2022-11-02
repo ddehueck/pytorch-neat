@@ -1,5 +1,6 @@
+from collections import deque
 import numpy as np
-from utils import random_ensemble_generator
+from neat.utils import random_ensemble_generator, speciate
 
 """
 A set of algoritms needed for each trial's analysis
@@ -47,7 +48,7 @@ def greedy_1_selection_accuracies(pred_map, eval_func):
     while genomes_left:
 
         # Initialize this round's variables
-        best_accuracy = float('-inf')
+        best_accuracy = float("-inf")
         best_genome = None
 
         # Find the genome that best improves the current ensemble (genomes_picked)
@@ -69,15 +70,45 @@ def greedy_1_selection_accuracies(pred_map, eval_func):
 def greedy_2_selection_accuracies(pred_map, eval_func):
     genomes = list(pred_map.keys())
     genomes.sort(reverse=True, key=lambda g: g.fitness)
-    accuracies = []
-    for k in range(1, len(pred_map) + 1):
-        ensemble = genomes[0:k]
-        ensemble_member_results = [pred_map[x] for x in ensemble]
-        accuracies.append(eval_func(ensemble_member_results))
-    return accuracies
+    predictions_in_order = [pred_map[g] for g in genomes]
+    return __accuracies_for_predictions_in_order(predictions_in_order, eval_func)
 
 
-def diversity_rr_selection_accuracies(pred_map, eval_func, speciation_threshold=0.8):
-    # TODO round robin style picking from different species (based on threshold)
-    # each species sorted by top accuracy down to lowest accuracy
-    pass
+def diversity_rr_selection_accuracies(pred_map, eval_func, speciation_threshold=3.0):
+
+    # Step 1: Divide genomes based on speciation threshold
+    species = speciate(pred_map.keys(), speciation_threshold)
+
+    # Step 2: Sort genomes in each species in descending order by their fitness
+    for s in species:
+        s.sort(reverse=True, key=lambda g: g.fitness)
+
+    # Step 3: Pick the genomes from each species round-robin style
+    species = [deque(s) for s in species]
+    genomes_in_order = []
+
+    # For each round-robin round while we still have species left to choose from
+    while species:
+
+        # Pick best genome for each species
+        for s in species:
+            genomes_in_order.append(s.popleft())
+
+        # Remove empty species
+        species = [s for s in species if s]
+
+    # Step 4: Calculate the accuracies based on the picked genomes in order
+    predictions_in_order = [pred_map[g] for g in genomes_in_order]
+    return __accuracies_for_predictions_in_order(predictions_in_order, eval_func)
+
+
+def __accuracies_for_predictions_in_order(predictions_in_order, eval_func):
+    """
+    Creates the accuracies for a list of networks' predictions in their ensemble order
+    E.g. the predictions for an ensemble of size 1 would be predictions_in_order[0:1],
+    and the predictions for an ensemble of size k would be predictions_in_order[0:k]
+    """
+    return [
+        eval_func(predictions_in_order[0:k])
+        for k in range(1, len(predictions_in_order) + 1)
+    ]
