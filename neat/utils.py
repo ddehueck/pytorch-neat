@@ -84,9 +84,9 @@ def random_ensemble_generator(genomes, k=None, limit=None):
     n = len(genomes)
     seen = set()
 
-    if limit is None:
-        limit = 2**n - 1 if k is None else math.comb(n, k)
-        limit /= 2
+    max_limit = 2**n - 1 if k is None else math.comb(n, k)
+    max_limit /= 2
+    limit = max_limit if limit is None else min(limit, max_limit)
 
     while len(seen) < limit:
         ensemble_length = random.randint(1, n) if k is None else k
