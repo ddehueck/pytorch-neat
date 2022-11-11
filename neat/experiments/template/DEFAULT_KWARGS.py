@@ -2,21 +2,19 @@ DEFAULT_KWARGS = {
 
         'VERBOSE' : True,
 
-        'DATASET' : None,
-
-        'NUM_INPUTS' : None,
-        'NUM_OUTPUTS' : None,
+        'NUM_INPUTS' : 784,
+        'NUM_OUTPUTS' : 10,
         'USE_BIAS' : True, 
 
-        'ENSEMBLE_SIZE' : 3,
-        'CANDIDATE_LIMIT' : None,
+        'GENERATIONAL_ENSEMBLE_SIZE' : 5,
+        'CANDIDATE_LIMIT' : 5,
 
         'ACTIVATION' : 'sigmoid',
         'SCALE_ACTIVATION' : 4.9,
 
-        'FITNESS_THRESHOLD' : 0.8,
+        'FITNESS_THRESHOLD' : float("inf"),
 
-        'POPULATION_SIZE' : 100,
+        'POPULATION_SIZE' : 10,
         'NUMBER_OF_GENERATIONS' : 10,
         'SPECIATION_THRESHOLD' : 3.0,
 

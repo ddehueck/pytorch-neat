@@ -16,7 +16,9 @@ class TemplateConfig:
 
         for k, v in kwargs.items(): 
             setattr(self, k, v)
-
+    
+    def __call__(self):
+        return self
 
     def eval_genomes(self, genomes):
 
