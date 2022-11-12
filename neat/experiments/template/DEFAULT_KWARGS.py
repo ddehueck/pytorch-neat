@@ -6,16 +6,19 @@ DEFAULT_KWARGS = {
         'NUM_OUTPUTS' : 10,
         'USE_BIAS' : True, 
 
-        'GENERATIONAL_ENSEMBLE_SIZE' : 5,
-        'CANDIDATE_LIMIT' : 5,
+        'GENERATIONAL_ENSEMBLE_SIZE' : 7,
+        'CANDIDATE_LIMIT' : 10,
 
         'ACTIVATION' : 'sigmoid',
         'SCALE_ACTIVATION' : 4.9,
 
         'FITNESS_THRESHOLD' : float("inf"),
 
-        'POPULATION_SIZE' : 10,
-        'NUMBER_OF_GENERATIONS' : 10,
+        'INITIAL_FITNESS_COEFFICIENT' : 0.1,
+        'FINAL_FITNESS_COEFFICIENT' : 0.9,
+
+        'POPULATION_SIZE' : 15,
+        'NUMBER_OF_GENERATIONS' : 100,
         'SPECIATION_THRESHOLD' : 3.0,
 
         'CONNECTION_MUTATION_RATE' : 0.80,
