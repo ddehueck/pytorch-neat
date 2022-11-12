@@ -82,22 +82,19 @@ class MNISTConfig:
             constituent_ensemble_losses = []
             #Iterate through a sample of all possible combinations of candidate genomes to ensemble for a given size k
             sample_ensembles = random_ensemble_generator_for_static_genome(genome, genomes, k = self.GENERATIONAL_ENSEMBLE_SIZE, limit = self.CANDIDATE_LIMIT)
-            #print("sample_ENS:", [s for s in sample_ensembles])
-            for sample_ensemble in sample_ensembles: #Returns limit length iterable of array of size k of dict {genome:activations} 
-                #Append given genome activations to list
-                #print("sample_ens: ", sample_ensemble)
-                #print("genome_Z", activations_map[genome]
+        
+            for sample_ensemble in sample_ensembles:
 
                 ensemble_activations = [np.squeeze(activations_map[genome])]
                 #Append candidate genome activations to list
                 for candidate in sample_ensemble:
                     ensemble_activations.append(np.squeeze(activations_map[candidate]))
                 
-                #print("ens_Z", ensemble_activations)
+            
                 average_ensemble_activations = np.mean(ensemble_activations, axis = 0)
-                #print("mean_ens_Z", average_ensemble_activations)
+              
                 ensemble_predictions = np.array([softmax(z) for z in average_ensemble_activations]) #TODO Replace with function specified by config kwarg
-                #print("ens pred:", ensemble_predictions[0]) 
+          
                 constituent_ensemble_loss = cross_entropy(y,ensemble_predictions)
                 constituent_ensemble_losses.append(constituent_ensemble_loss)
             #set the genome fitness as the average loss of the candidate ensembles TODO use kwarg switching for fitness_fn
