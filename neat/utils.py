@@ -61,6 +61,7 @@ def create_prediction_map(genomes, dataset, config):
         phenotype.to(config.DEVICE)
         for input in dataset:
             input.to(config.DEVICE)
+            print(input.shape)
             prediction = phenotype(input)
             results.append(prediction.detach().numpy())
         genomes_to_results[genome] = np.array(results)
@@ -115,3 +116,7 @@ def random_ensemble_generator_for_static_genome(genome, genomes, k=None, limit=N
     k = None if k is None else k - 1
     for ensemble in random_ensemble_generator(genomes=genomes, k=k, limit=limit):
         yield {genome, *ensemble}
+
+
+
+

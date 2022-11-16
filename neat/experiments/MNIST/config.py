@@ -30,9 +30,11 @@ class MNISTConfig:
 
         mnist_data = datasets.MNIST(root="./data", train=True, download=True)
         data = mnist_data.data
-        data = data.view(data.size(0), -1).float()
-        data = data / 255
-        self.targets = mnist_data.targets
+        targets = mnist_data.targets
+
+        # data = data.view(data.size(0), -1).float()
+        # data = data / 255
+        # 
 
         # self.test = mnist_data.test_data
         # self.test = self.test.view(self.test.size(0), -1).float()
@@ -43,23 +45,37 @@ class MNISTConfig:
         # train_labels = train_labels[:10]
         # test = test[:10]
         # test_labels = test_labels[:10]
-        # Split all training examples into a python list
-        self.data = list(data)
-        self.data = [i.reshape(1, 784) for i in self.data]
-        print(len(self.data))
-        print(self.data[0].shape)
 
-        self.data = self.data[:10]
-        self.targets = self.targets[:10]
+        # Split all training examples into a python list
+        # self.data = list(data)
+        # self.data = [i.reshape(1, 784) for i in self.data]
+        # print(len(self.data))
+        # print(self.data[0].shape)
+
+        # self.data = self.data[:10]
+        # self.targets = self.targets[:10]
+
+        print(data.shape)
+        
+        if(self.USE_CONV):
+            conv_data = []
+            conv = nn.Conv2d(in_channels = 1, out_channels = 1, kernel_size = 3, stride = 2)
+            for x in data:
+                x = x.float().reshape(1,28,28)
+                conv_data.append(conv(x))
+            print(conv_data[0].shape)
+            self.data = conv_data
+            self.NUM_INPUTS = conv_data[0].flatten().shape[0]
+        
         # Print the shape of the train dataset
         #print("Data shape:", self.data)
         # Print the shape of the test dataset
         #print("Test shape:", self.test.shape)
     
         # Print the targets
-        self.targets = torch.from_numpy(np.eye(10)[self.targets])
-        self.targets = list(self.targets)
-        self.targets = [i.reshape(1, 10) for i in self.targets]
+        targets = torch.from_numpy(np.eye(10)[targets])
+        targets = list(targets)
+        self.targets = [i.reshape(1, 10) for i in targets]
         print("Targets:", len(self.targets))
         print("Target shape:", self.targets[0].shape)
 
@@ -89,7 +105,7 @@ class MNISTConfig:
 
         print(f"fitness = {genome_fitness_coefficient} * genome_fitness + {ensemble_fitness_coefficient} * constituent_ensemble_fitness")
 
-        for genome in genomes:
+        for genome in tqdm(genomes):
 
             genome_prediction = np.array([softmax(z) for z in np.squeeze(activations_map[genome])])
             genome_loss = cross_entropy(y, genome_prediction)

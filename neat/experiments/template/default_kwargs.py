@@ -6,8 +6,10 @@ DEFAULT_KWARGS = {
         'NUM_OUTPUTS' : 10,
         'USE_BIAS' : True, 
 
-        'GENERATIONAL_ENSEMBLE_SIZE' : 7,
-        'CANDIDATE_LIMIT' : 10,
+        'USE_CONV' : True,
+
+        'GENERATIONAL_ENSEMBLE_SIZE' : 2,
+        'CANDIDATE_LIMIT' : 1,
 
         'ACTIVATION' : 'sigmoid',
         'SCALE_ACTIVATION' : 4.9,
@@ -17,7 +19,7 @@ DEFAULT_KWARGS = {
         'INITIAL_FITNESS_COEFFICIENT' : 0.1,
         'FINAL_FITNESS_COEFFICIENT' : 0.9,
 
-        'POPULATION_SIZE' : 15,
+        'POPULATION_SIZE' : 3,
         'NUMBER_OF_GENERATIONS' : 100,
         'SPECIATION_THRESHOLD' : 3.0,
 
