@@ -59,14 +59,16 @@ class MNISTConfig:
         
         if(self.USE_CONV):
             conv_data = []
-            conv = nn.Conv2d(in_channels = 1, out_channels = 1, kernel_size = 3, stride = 2)
+            conv = nn.Conv2d(in_channels = 1, out_channels = 1, kernel_size = 5, stride = 2)
             for x in data:
                 x = x.float().reshape(1,28,28)
-                conv_data.append(conv(x))
+                conv_data.append(conv(x).flatten())
             print(conv_data[0].shape)
-            self.data = conv_data
+            size = conv_data[0].flatten().shape[0]
+            self.data = [i.reshape(1, size) for i in conv_data]
             self.NUM_INPUTS = conv_data[0].flatten().shape[0]
         
+        print(self.data[0])
         # Print the shape of the train dataset
         #print("Data shape:", self.data)
         # Print the shape of the test dataset
@@ -117,7 +119,7 @@ class MNISTConfig:
             #Iterate through a sample of all possible combinations of candidate genomes to ensemble for a given size k
             sample_ensembles = random_ensemble_generator_for_static_genome(genome, genomes, k = self.GENERATIONAL_ENSEMBLE_SIZE, limit = self.CANDIDATE_LIMIT)
 
-            for sample_ensemble in sample_ensembles:
+            for sample_ensemble in tqdm(sample_ensembles):
 
                 ensemble_activations = [np.squeeze(activations_map[genome])]
 

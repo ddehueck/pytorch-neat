@@ -61,7 +61,7 @@ def create_prediction_map(genomes, dataset, config):
         phenotype.to(config.DEVICE)
         for input in dataset:
             input.to(config.DEVICE)
-            print(input.shape)
+            #print(input.shape)
             prediction = phenotype(input)
             results.append(prediction.detach().numpy())
         genomes_to_results[genome] = np.array(results)
