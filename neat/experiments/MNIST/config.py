@@ -21,15 +21,16 @@ class MNISTConfig:
         for k, v in kwargs.items(): 
             setattr(self, k, v)
 
-        increment = (self.FINAL_FITNESS_COEFFICIENT - self.INITIAL_FITNESS_COEFFICIENT)/self.NUMBER_OF_GENERATIONS
+        increment = (self.FINAL_FITNESS_COEFFICIENT - self.INITIAL_FITNESS_COEFFICIENT)/self.NUMBER_OF_GENERATIONS  # type: ignore
 
-        ensemble_coefficients = np.arange(self.INITIAL_FITNESS_COEFFICIENT, self.FINAL_FITNESS_COEFFICIENT, increment)
+        ensemble_coefficients = np.arange(self.INITIAL_FITNESS_COEFFICIENT, self.FINAL_FITNESS_COEFFICIENT, increment)  # type: ignore
         genome_coefficients = ensemble_coefficients[::-1]
         self.genome_coefficients = iter(genome_coefficients)
         self.ensemble_coefficients = iter(ensemble_coefficients)
 
         mnist_data = datasets.MNIST(root="./data", train=True, download=True)
         data = mnist_data.data
+        data = data.view(data.size(0), -1).float()
         targets = mnist_data.targets
 
         # data = data.view(data.size(0), -1).float()
@@ -57,7 +58,7 @@ class MNISTConfig:
 
         print(data.shape)
         
-        if(self.USE_CONV):
+        if(self.USE_CONV):  # type: ignore
             conv_data = []
             conv = nn.Conv2d(in_channels = 1, out_channels = 1, kernel_size = 5, stride = 2)
             for x in data:
@@ -117,7 +118,7 @@ class MNISTConfig:
 
             constituent_ensemble_losses = []
             #Iterate through a sample of all possible combinations of candidate genomes to ensemble for a given size k
-            sample_ensembles = random_ensemble_generator_for_static_genome(genome, genomes, k = self.GENERATIONAL_ENSEMBLE_SIZE, limit = self.CANDIDATE_LIMIT)
+            sample_ensembles = random_ensemble_generator_for_static_genome(genome, genomes, k = self.GENERATIONAL_ENSEMBLE_SIZE, limit = self.CANDIDATE_LIMIT)  # type: ignore
 
             for sample_ensemble in tqdm(sample_ensembles):
 

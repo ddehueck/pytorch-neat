@@ -4,7 +4,7 @@ DEFAULT_KWARGS = {
 
         'NUM_INPUTS' : 784,
         'NUM_OUTPUTS' : 10,
-        'USE_BIAS' : True, 
+        'USE_BIAS' : False, 
 
         'USE_CONV' : True,
 
