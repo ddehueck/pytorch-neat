@@ -63,7 +63,7 @@ def create_prediction_map(genomes, dataset, config):
         for input in dataset:
             input.to(config.DEVICE)
             prediction = phenotype(input)
-            results.append(prediction.numpy())
+            results.append(prediction.detach().numpy())
         genomes_to_results[genome] = np.array(results)
     return genomes_to_results
 
