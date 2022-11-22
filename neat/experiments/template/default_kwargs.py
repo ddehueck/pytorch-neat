@@ -8,8 +8,8 @@ DEFAULT_KWARGS = {
 
         'USE_CONV' : True,
 
-        'GENERATIONAL_ENSEMBLE_SIZE' : 2,
-        'CANDIDATE_LIMIT' : 1,
+        'GENERATIONAL_ENSEMBLE_SIZE' : 5,
+        'CANDIDATE_LIMIT' : 25,
 
         'ACTIVATION' : 'sigmoid',
         'SCALE_ACTIVATION' : 4.9,
@@ -19,7 +19,7 @@ DEFAULT_KWARGS = {
         'INITIAL_FITNESS_COEFFICIENT' : 0.1,
         'FINAL_FITNESS_COEFFICIENT' : 0.9,
 
-        'POPULATION_SIZE' : 3,
+        'POPULATION_SIZE' : 10,
         'NUMBER_OF_GENERATIONS' : 100,
         'SPECIATION_THRESHOLD' : 3.0,
 
@@ -32,4 +32,4 @@ DEFAULT_KWARGS = {
 
         'PERCENTAGE_TO_SAVE' : 0.80
 
-}        
+}     
