@@ -88,23 +88,34 @@ class MNISTConfig:
 
     def eval_genomes(self, genomes):
 
+        dataset = self.data #TODO get [tensors] self.DATASET
+        y = [np.squeeze(np.array(y_)) for y_ in self.targets] #TDOD get [actuals]
+        self.y = y
+
         #GET RID OF THIS | REPLACE WITH ALG SELECTED BY KWARG
+        @staticmethod
         def softmax(x):
             """Compute softmax values for each sets of scores in x."""
             return np.exp(x)/np.sum(np.exp(x),axis=0)
 
+        @staticmethod
         def cross_entropy(y,y_pred):
             loss=-np.sum(y*np.log(y_pred))
             return loss/float(y_pred.shape[0])
+
+        def create_activation_map(self, population):  #for expieriment wrapper eval
+            return create_prediction_map(population, self.data, self)
         
-        dataset = self.data #TODO get [tensors] self.DATASET
-        y = [np.squeeze(np.array(y_)) for y_ in self.targets] #TDOD get [actuals]
-        #print("Y:", y)
+        def ensemble_activations_evaluator(self, ensemble_activations): #for experiment wrapper eval
+            average_ensemble_activations = np.mean(ensemble_activations, axis = 0)
+            ensemble_predictions = np.array([softmax(z) for z in average_ensemble_activations])
+            constituent_ensemble_loss = cross_entropy(self.y,ensemble_predictions)
+            ensemble_fitness = np.exp(constituent_ensemble_loss)
+            return ensemble_fitness
 
         activations_map = create_prediction_map(genomes, dataset, self)
         genome_fitness_coefficient = next(self.genome_coefficients)
         ensemble_fitness_coefficient = next(self.ensemble_coefficients)
-        #print("map:" , activations_map)
 
         print(f"fitness = {genome_fitness_coefficient} * genome_fitness + {ensemble_fitness_coefficient} * constituent_ensemble_fitness")
 
