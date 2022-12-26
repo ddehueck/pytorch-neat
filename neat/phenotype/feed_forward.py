@@ -22,6 +22,7 @@ class FeedForwardNet(nn.Module):
             self.lin_modules.append(unit.linear)
 
     def forward(self, x):
+        #ASSUMES MULTI CHANNEL TENSOR
         outputs = dict()
         input_units = [u for u in self.units if u.ref_node.type == 'input']
         output_units = [u for u in self.units if u.ref_node.type == 'output']
