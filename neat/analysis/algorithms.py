@@ -115,16 +115,17 @@ def __accuracies_for_predictions_in_order(predictions_in_order, eval_func):
 
 
 ALGORITHMS = {
-    "random": random_selection_accuracies,
+    # We do not want to use the default random algo,
+    # since it gives very sporadic/inconsistent results:
+    # "random": random_selection_accuracies,
+    # 100 trials per ensemble size produces better results:
+    "random": lambda p, e: random_selection_accuracies(p, e, ensembles_per_k=100),
     "greedy1": greedy_1_selection_accuracies,
     "greedy2": greedy_2_selection_accuracies,
     "diversity": diversity_rr_selection_accuracies,
-    # The following are two examples of how to add custom-param algos,
-    # in case we also want to run with different parameters in the future
-    "random_high_sample_size": lambda p, e: random_selection_accuracies(
-        p, e, ensembles_per_k=100
-    ),
-    "diversity_speciation_2": lambda p, e: diversity_rr_selection_accuracies(
+    # The following is an example of how to add other custom-param algos, in case we
+    # want to try different parameters in the future (like lower speciation threshold).
+    "diversity_threshold_2.0": lambda p, e: diversity_rr_selection_accuracies(
         p, e, speciation_threshold=2.0
     ),
 }
