@@ -10,16 +10,16 @@ class PoleBalanceConfig:
     VERBOSE = True
 
     NUM_INPUTS = 6
-    NUM_OUTPUTS = 4
+    NUM_OUTPUTS = 1
     USE_BIAS = True
 
     ACTIVATION = 'sigmoid'
     SCALE_ACTIVATION = 4.9
 
-    FITNESS_THRESHOLD = 100000.0
+    FITNESS_THRESHOLD = 10000000.0
 
     POPULATION_SIZE = 150
-    NUMBER_OF_GENERATIONS = 150
+    NUMBER_OF_GENERATIONS = 1000
     SPECIATION_THRESHOLD = 3.0
 
     CONNECTION_MUTATION_RATE = 0.80
@@ -33,11 +33,11 @@ class PoleBalanceConfig:
     PERCENTAGE_TO_SAVE = 0.80
 
     # Allow episode lengths of > than 200
-    gym.envs.register(
-        id='Acrobot-v1',
-        entry_point='gym.envs.classic_control:AcrobotEnv',
-        max_episode_steps=100000
-    )
+    # gym.envs.register(
+    #     id='Acrobot-v1',
+    #     entry_point='gym.envs.classic_control:AcrobotEnv',
+    #     max_episode_steps=1000
+    # )
 
     def fitness_fn(self, genome):
             # OpenAI Gym
@@ -47,16 +47,23 @@ class PoleBalanceConfig:
 
             fitness = 0
             phenotype = FeedForwardNet(genome, self)
-
+            counter = 0
             while not done:
                 observation = np.array([observation])
                 input = torch.Tensor(observation).to(self.DEVICE)
-                print(input)
 
                 pred = round(float(phenotype(input)))
+                # print(pred)
                 observation, reward, done, info = env.step(pred)
+                # print(reward)
+                if counter % 100 == 0:
+                    print(reward)
+                reward = reward + 1
+                counter += 1
+                # print(reward)
 
                 fitness += reward
+                # print(fitness/)
             env.close()
 
             return fitness
