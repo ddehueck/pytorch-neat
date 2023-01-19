@@ -42,7 +42,8 @@ kwargs['TARGET'] = y_train
 kwargs['NUM_INPUTS'] = kwargs['DATA'].shape[1]
 kwargs['NUM_OUTPUTS'] = kwargs['TARGET'].shape[1]
 
-
+kwargs['TEST_DATA'] = X_test
+kwargs['TEST_TARGET'] = y_test
 
 neat = pop.Population(c.UCIConfig(**kwargs))
 solution, generation = neat.run()

@@ -5,7 +5,8 @@ from neat.phenotype.feed_forward import FeedForwardNet
 #from torchvision import datasets
 from tqdm import tqdm
 
-from neat.utils import create_prediction_map, random_ensemble_generator_for_static_genome
+from neat.utils import create_prediction_map, random_ensemble_generator_for_static_genome, speciate
+import neat.analysis.wrapper as wrapper
 
 import numpy as np
 
@@ -20,38 +21,55 @@ class UCIConfig:
         for k, v in kwargs.items(): 
             setattr(self, k, v)
 
-        increment = (self.FINAL_FITNESS_COEFFICIENT - self.INITIAL_FITNESS_COEFFICIENT)/self.NUMBER_OF_GENERATIONS  # type: ignore
+        if self.USE_FITNESS_COEFFICIENT: #type: ignore
 
-        ensemble_coefficients = np.arange(self.INITIAL_FITNESS_COEFFICIENT, self.FINAL_FITNESS_COEFFICIENT, increment)  # type: ignore
-        genome_coefficients = ensemble_coefficients[::-1]
-        self.genome_coefficients = iter(genome_coefficients)
-        self.ensemble_coefficients = iter(ensemble_coefficients)
+            increment = (self.FINAL_FITNESS_COEFFICIENT - self.INITIAL_FITNESS_COEFFICIENT)/self.NUMBER_OF_GENERATIONS  # type: ignore
+
+            ensemble_coefficients = np.arange(self.INITIAL_FITNESS_COEFFICIENT, self.FINAL_FITNESS_COEFFICIENT, increment)  # type: ignore
+            genome_coefficients = ensemble_coefficients[::-1]
+            self.genome_coefficients = iter(genome_coefficients)
+            self.ensemble_coefficients = iter(ensemble_coefficients)
+        
+        else:
+            genome_coefficients = np.ones(self.NUMBER_OF_GENERATIONS) #type: ignore
+            ensemble_coefficients = np.zeros(self.NUMBER_OF_GENERATIONS) #type: ignore
+            self.genome_coefficients = iter(genome_coefficients)
+            self.ensemble_coefficients = iter(ensemble_coefficients)
 
     def __call__(self):
         return self
 
+    def create_activation_map(self, genomes, X):
+        genomes_to_results = {}
+        for genome in tqdm(genomes):
+            results = []
+            phenotype = FeedForwardNet(genome, self)
+            phenotype.to(self.DEVICE)
+            for input in X:
+                #Adds batch dimension
+                input = torch.unsqueeze(input, 0)
+                input.to(self.DEVICE)
+                prediction = phenotype(input).to('cpu')
+                results.append(prediction)
+            genomes_to_results[genome] = torch.squeeze(torch.stack(results))
+        return genomes_to_results
+    
+    def constituent_ensemble_evaluation(self, ensemble_activations):
+        
+        softmax = nn.Softmax(dim=1)
+        CE_loss = nn.CrossEntropyLoss()
+
+        soft_activations = torch.sum(torch.stack(ensemble_activations, dim = 0), dim = 0)
+        
+        constituent_ensemble_loss = CE_loss(softmax(soft_activations), self.TEST_TARGET.to(torch.float32)).item()
+
+        ensemble_fitness = np.exp(-1 * constituent_ensemble_loss)
+
+        return ensemble_fitness
 
     def eval_genomes(self, genomes):
 
-        def create_activation_map(genomes, X):
-            genomes_to_results = {}
-            for i,genome in enumerate(genomes):
-                results = []
-                phenotype = FeedForwardNet(genome, self)
-                phenotype.to(self.DEVICE)
-                queue = tqdm(X)
-                for input in queue:
-                    queue.set_description(f"Evaluating Genome {i}")
-                    #Adds batch dimension
-                    input = torch.unsqueeze(input, 0)
-                    input.to(self.DEVICE)
-                    prediction = phenotype(input).to('cpu')
-                    results.append(prediction)
-                genomes_to_results[genome] = torch.squeeze(torch.stack(results))
-                queue.reset()
-            return genomes_to_results
-
-        activations_map = create_activation_map(genomes, self.DATA) #type: ignore
+        activations_map = self.create_activation_map(genomes, self.DATA) #type: ignore
 
         #print(activations_map.values())
         
@@ -59,19 +77,20 @@ class UCIConfig:
         ensemble_fitness_coefficient = next(self.ensemble_coefficients)
 
         #print(f"fitness = {genome_fitness_coefficient} * genome_fitness + {ensemble_fitness_coefficient} * constituent_ensemble_fitness")
+        # species = speciate(genomes, self.SPECIATION_THRESHOLD) #type: ignore
+        # print(species)
 
-        queue = tqdm(genomes)
-        for i,genome in enumerate(queue):
-            queue.set_description(f"Computing Genome {i} Fitness")
+        for genome in tqdm(genomes):
             softmax = nn.Softmax(dim=1)
             genome_prediction = softmax(activations_map[genome])
             CE_loss = nn.CrossEntropyLoss()
             genome_loss = CE_loss(genome_prediction, self.TARGET.to(torch.float32)).item()
             genome_fitness = np.exp(-1 * genome_loss)
             #print(f"genome_loss: {genome_loss} | genome_fitness: {genome_fitness}")
-
             constituent_ensemble_losses = []
             #Iterate through a sample of all possible combinations of candidate genomes to ensemble for a given size k
+            
+
             sample_ensembles = random_ensemble_generator_for_static_genome(genome, genomes, k = self.GENERATIONAL_ENSEMBLE_SIZE, limit = self.CANDIDATE_LIMIT)  # type: ignore
 
             for sample_ensemble in sample_ensembles:
@@ -88,6 +107,7 @@ class UCIConfig:
                 constituent_ensemble_loss = CE_loss(softmax(soft_activations), self.TARGET.to(torch.float32)).item()
 
                 constituent_ensemble_losses.append(constituent_ensemble_loss)
+
             #set the genome fitness as the average loss of the candidate ensembles TODO use kwarg switching for fitness_fn
             
             ensemble_fitness = np.exp(-1 * np.mean(constituent_ensemble_losses))
@@ -95,6 +115,10 @@ class UCIConfig:
             #print(f"ensemble_loss: {np.mean(constituent_ensemble_losses)} | ensemble_fitness: {ensemble_fitness}")
             
             genome.fitness = genome_fitness_coefficient * genome_fitness + ensemble_fitness_coefficient * ensemble_fitness
+            print(genome.species)
+
+        df_results = wrapper.run_trial_analysis(self.create_activation_map(genomes, self.TEST_DATA), self.constituent_ensemble_evaluation)
+        df_results.to_csv('./df_results.csv')
         
         population_fitness = np.mean([genome.fitness for genome in genomes])
         #print("population_fitness: ", population_fitness)

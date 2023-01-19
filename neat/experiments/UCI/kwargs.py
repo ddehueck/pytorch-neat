@@ -19,6 +19,7 @@ KWARGS = {
 
         'FITNESS_THRESHOLD' : float("inf"),
 
+        'USE_FITNESS_COEFFICIENT' : False,
         'INITIAL_FITNESS_COEFFICIENT' : 0.1,
         'FINAL_FITNESS_COEFFICIENT' : 0.9,
 
