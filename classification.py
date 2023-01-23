@@ -44,8 +44,8 @@ sweep_configuration = {
     'method': 'random',
     'name': 'sweep',
     'metric': {
-        'goal': 'minimize', 
-        'name': 'constituent_ensemble_fitness'
+        'goal': 'maximize', 
+        'name': 'diversity'
 		},
     'parameters': {
         'VERBOSE': {'values': [True, False]},
@@ -142,5 +142,5 @@ def train():
 
 if __name__ == '__main__':
     # train()
-    wandb.agent("apmzg5up", function=train)
+    wandb.agent("13wk40yj", function=train)
 

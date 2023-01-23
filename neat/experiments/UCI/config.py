@@ -17,8 +17,6 @@ class UCIConfig:
 
     def __init__(self, **kwargs):
 
-        # print("Hello!!!!!!!!!!!!!!")
-
         self.DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         for k, v in kwargs.items(): 
@@ -70,7 +68,6 @@ class UCIConfig:
         ensemble_fitness = np.exp(-1 * constituent_ensemble_loss)
 
         self.wandb.log({"constituent_ensemble_loss": constituent_ensemble_loss})
-        # print("HEllO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         self.wandb.log({"constituent_ensemble_fitness": ensemble_fitness})
 
         return ensemble_fitness
@@ -127,11 +124,17 @@ class UCIConfig:
 
         df_results = wrapper.run_trial_analysis(self.create_activation_map(genomes, self.TEST_DATA), self.constituent_ensemble_evaluation)
         df_results.to_csv('./df_results.csv')
+
+        # Take the mean for each column
+        # df_results = 
+        # Convert it to a dictinary
+        # df_results = df_results
+        # Log the results with wandb
+        self.wandb.log(df_results.mean(axis=0).to_dict())
         
         population_fitness = np.mean([genome.fitness for genome in genomes])
         #print("population_fitness: ", population_fitness)
         
         # Log population fitness with wandb 
-        print("Hellooo!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         self.wandb.log({"population_fitness": population_fitness})
         return population_fitness
