@@ -142,5 +142,5 @@ def train():
 
 if __name__ == '__main__':
     # train()
-    wandb.agent(sweep_id, function=train)
+    wandb.agent("apmzg5up", function=train)
 
