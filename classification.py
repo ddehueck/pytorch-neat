@@ -48,7 +48,24 @@ sweep_configuration = {
         'name': 'constituent_ensemble_fitness'
 		},
     'parameters': {
-        'POPULATION_SIZE': {'values': [16, 32, 64]},
+        'VERBOSE': {'values': [True, False]},
+        'USE_BIAS': {'values': [False, True]},
+        'GENERATIONAL_ENSEMBLE_SIZE': {'values': [2, 5, 7]},
+        'CANDIDATE_LIMIT': {'values': [2, 5, 7]},
+        'ACTIVATION': {'values': ['sigmoid']},
+        'SCALE_ACTIVATION': {'max': 7, 'min': 2},
+        'USE_FITNESS_COEFFICIENT': {'values': [False, True]},
+        'INITIAL_FITNESS_COEFFICIENT': {'max': 1.0, 'min': 0.0},
+        'FINAL_FITNESS_COEFFICIENT': {'max': 1, 'min': 0},
+        'POPULATION_SIZE': {'values': [5, 15, 50, 100, 150]},
+        'NUMBER_OF_GENERATIONS': {'values': [10, 50, 100]},
+        'SPECIATION_THRESHOLD': {'values': [2.0, 3.0, 4.0, 5.0]},
+        'CONNECTION_MUTATION_RATE': {'max': 1.0, 'min': 0.5},
+        'CONNECTION_PERTURBATION_RATE': {'max': 1.0, 'min': 0.5},
+        'ADD_NODE_MUTATION_RATE': {'max': 0.1, 'min': 0.001},
+        'ADD_CONNECTION_MUTATION_RATE': {'max': 0.7, 'min': 0.1},
+        'CROSSOVER_REENABLE_CONNECTION_GENE_RATE': {'max': 0.7, 'min': 0.1},
+        'PERCENTAGE_TO_SAVE': {'max': 1.0, 'min': 0.5}
 
 
         # 'NUMBER_OF_GENERATIONS' : {'values': [50, 100, 150, 200, 250]}
