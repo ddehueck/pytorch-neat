@@ -10,11 +10,14 @@ import neat.analysis.wrapper as wrapper
 
 import numpy as np
 
+# import wandb
 
 class UCIConfig:
     
 
     def __init__(self, **kwargs):
+
+        # print("Hello!!!!!!!!!!!!!!")
 
         self.DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -35,6 +38,7 @@ class UCIConfig:
             ensemble_coefficients = np.zeros(self.NUMBER_OF_GENERATIONS) #type: ignore
             self.genome_coefficients = iter(genome_coefficients)
             self.ensemble_coefficients = iter(ensemble_coefficients)
+
 
     def __call__(self):
         return self
@@ -64,6 +68,10 @@ class UCIConfig:
         constituent_ensemble_loss = CE_loss(softmax(soft_activations), self.TEST_TARGET.to(torch.float32)).item()
 
         ensemble_fitness = np.exp(-1 * constituent_ensemble_loss)
+
+        self.wandb.log({"constituent_ensemble_loss": constituent_ensemble_loss})
+        # print("HEllO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        self.wandb.log({"constituent_ensemble_fitness": ensemble_fitness})
 
         return ensemble_fitness
 
@@ -122,4 +130,8 @@ class UCIConfig:
         
         population_fitness = np.mean([genome.fitness for genome in genomes])
         #print("population_fitness: ", population_fitness)
+        
+        # Log population fitness with wandb 
+        print("Hellooo!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        self.wandb.log({"population_fitness": population_fitness})
         return population_fitness

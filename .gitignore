@@ -108,3 +108,5 @@ venv.bak/
 data/MNIST/raw/
 
 *.csv
+
+wandb/
