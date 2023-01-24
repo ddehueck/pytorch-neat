@@ -48,17 +48,11 @@ sweep_configuration = {
         'name': 'diversity'
 		},
     'parameters': {
-        'VERBOSE': {'values': [True, False]},
         'USE_BIAS': {'values': [False, True]},
-        'GENERATIONAL_ENSEMBLE_SIZE': {'values': [2, 5, 7]},
-        'CANDIDATE_LIMIT': {'values': [2, 5, 7]},
-        'ACTIVATION': {'values': ['sigmoid']},
+        'GENERATIONAL_ENSEMBLE_SIZE': {'values': [2, 3, 5, 9]},
+        'CANDIDATE_LIMIT': {'values': [2, 7, 25]},
         'SCALE_ACTIVATION': {'max': 7, 'min': 2},
         'USE_FITNESS_COEFFICIENT': {'values': [False, True]},
-        'INITIAL_FITNESS_COEFFICIENT': {'max': 1.0, 'min': 0.0},
-        'FINAL_FITNESS_COEFFICIENT': {'max': 1, 'min': 0},
-        'POPULATION_SIZE': {'values': [5, 15, 50, 100, 150]},
-        'NUMBER_OF_GENERATIONS': {'values': [10, 50, 100]},
         'SPECIATION_THRESHOLD': {'values': [2.0, 3.0, 4.0, 5.0]},
         'CONNECTION_MUTATION_RATE': {'max': 1.0, 'min': 0.5},
         'CONNECTION_PERTURBATION_RATE': {'max': 1.0, 'min': 0.5},
@@ -66,28 +60,15 @@ sweep_configuration = {
         'ADD_CONNECTION_MUTATION_RATE': {'max': 0.7, 'min': 0.1},
         'CROSSOVER_REENABLE_CONNECTION_GENE_RATE': {'max': 0.7, 'min': 0.1},
         'PERCENTAGE_TO_SAVE': {'max': 1.0, 'min': 0.5}
-
-
-        # 'NUMBER_OF_GENERATIONS' : {'values': [50, 100, 150, 200, 250]}
      }
 }
 
 sweep_id = wandb.sweep(sweep=sweep_configuration, project="Classification", entity="evolvingnn")
+print(sweep_id)
 
 def train():
     wandb.init(config=KWARGS)
-    print(f"Type of wandb.config {type(wandb.config)}")
-    # print("Hello!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     kwargs = KWARGS
-    # If the args are in wandb.config over write the kargs
-
-    # Check if wandb.config has any keys
-    # if len(wandb.config.keys()) > 0:
-    #     # First check if there is a
-    #     for key in wandb.config:
-    #         kwargs[key] = wandb.config[key]
-    # else:
-    #     print("No keys")
 
     
     kwargs = {
@@ -141,6 +122,8 @@ def train():
     
 
 if __name__ == '__main__':
-    # train()
-    wandb.agent("13wk40yj", function=train)
+    # for _ in range(10):
+        # train()
+        
+    wandb.agent("luvq6kds", function=train)
 
