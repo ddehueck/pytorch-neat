@@ -141,7 +141,7 @@ class UCIConfig:
         # Convert it to a dictinary
         # df_results = df_results
         # Log the results with wandb
-        self.wandb.log(df_results.mean(axis=0).to_dict())
+        self.wandb.log(df_results.max(axis=0).to_dict())
         
         population_fitness = np.mean([genome.fitness for genome in genomes])
         #print("population_fitness: ", population_fitness)
