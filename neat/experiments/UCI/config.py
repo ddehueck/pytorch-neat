@@ -4,6 +4,7 @@ from torch import autograd
 from neat.phenotype.feed_forward import FeedForwardNet
 #from torchvision import datasets
 from tqdm import tqdm
+import pickle
 
 from neat.utils import create_prediction_map, random_ensemble_generator_for_static_genome, speciate
 import neat.analysis.wrapper as wrapper
@@ -124,6 +125,16 @@ class UCIConfig:
 
         df_results = wrapper.run_trial_analysis(self.create_activation_map(genomes, self.TEST_DATA), self.constituent_ensemble_evaluation)
         df_results.to_csv('./df_results.csv')
+
+        # Save the csv to wandb
+        self.wandb.save('./df_results.csv')
+
+        # Pickle and save the gnomes
+        with open('genomes.pkl', 'wb') as f:
+            pickle.dump(genomes, f)
+            
+        self.wandb.save('genomes.pkl')
+
 
         # Take the mean for each column
         # df_results = 
