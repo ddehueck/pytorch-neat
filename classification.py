@@ -68,8 +68,6 @@ print(sweep_id)
 
 def train():
     wandb.init(config=KWARGS)
-    kwargs = KWARGS
-
     
     kwargs = {
         'VERBOSE': wandb.config.VERBOSE,
@@ -97,6 +95,7 @@ def train():
         'DATA': X_train,
         'TARGET': y_train,
     }     
+
     kwargs['DATA'] = X_train
     kwargs['TARGET'] = y_train
 
@@ -117,6 +116,9 @@ def train():
 
     # Log generation
     wandb.log({'generation': generation})
+
+    # Clean up memory
+    del neat, kwargs
 
     return solution, generation
     
