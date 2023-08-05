@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from os import path
 from io import open
 
@@ -10,6 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pytorch-neat',
+    packages=find_packages(),
     version='0.0.1',
     description='A PyTorch implementation of the NEAT (NeuroEvolution of Augmenting Topologies) method which was originally created by Kenneth O. Stanley as a principled approach to evolving neural networks.',
     long_description=long_description,  # Optional
@@ -27,5 +28,4 @@ setup(
     ],
 
     keywords='neat pytorch neuroevolution',
-    packages=['neat']
 )
