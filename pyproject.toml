@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "pytorch-neat"
+version = "0.1.0"
+description = ""
+authors = ["D0rs4n <41237606+D0rs4n@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "pytorch_neat"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
